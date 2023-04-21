@@ -1,11 +1,12 @@
 ---
 # https://clang.llvm.org/docs/ClangFormatStyleOptions.html
-Language:                           Cpp
-ColumnLimit:                        120
-IndentWidth:                        4
-InsertBraces:                       true
-SeparateDefinitionBlocks:           Always
-AllowShortLoopsOnASingleLine:       false
-AllowShortFunctionsOnASingleLine:   false
-...
+Language: Cpp
+ColumnLimit: 120
+IndentWidth: 4
+IndentCaseLabels: true
+InsertBraces: true
+SeparateDefinitionBlocks: Always
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: false
+---
 
