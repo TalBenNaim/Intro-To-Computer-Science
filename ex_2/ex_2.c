@@ -15,6 +15,10 @@
 #define MIN_BASE 2
 #define MAX_BASE 9
 
+// defines related to option 5. Base64 to Decimal
+#define START_NUMBERS_RANGE_BASE64 52
+#define END_NUMBERS_RANGE_BASE64 61
+
 int main() {
 
     char choice;
@@ -288,8 +292,6 @@ int main() {
 
                 int invalidBase = 0;
                 int convertedNumber = 0;
-                int power = 1; // neutral to multiplication
-                int length = 0;
 
                 // run over the input until it's empty, each time we get the char to work with
                 do {
@@ -307,18 +309,11 @@ int main() {
                         break;
                     }
 
-                    power = 1; // reset power every time
-                    if (length == 0) {
-                        power = 1; // base x power 0 is 1; (no matter what x is)
-                    } else {
-                        for (int i = 0; i < length; i++) {
-                            power *= base;
-                        }
-                    }
+                    // get the real number
+                    number = number - '0';
 
-                    convertedNumber += power;
+                    convertedNumber = convertedNumber * base + number;
 
-                    length++;
                     // we stop if new line is present. same reason as above comment.
                 } while (number != NEW_LINE_ASCII);
 
@@ -328,10 +323,88 @@ int main() {
                 }
 
                 printf("The converted number is %u\n", convertedNumber);
+
+                //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
+                scanf("%[^\n]");
+                scanf("%c", &bufferCleaner);
+
                 break;
             }
 
             case '5': {
+                printf("Enter a number in base 64:\n");
+
+                char number;
+                int base = 64;
+                long convertedNumber = 0;
+
+                // run over the input until it's empty, each time we get the char to work with
+                do {
+                    scanf("%c", &number);
+
+                    // if input is empty (user have to press "enter" and create a new line to end)
+                    if (number == NEW_LINE_ASCII) {
+                        continue;
+                    }
+
+                    // 'A' is the starting point of capital letters in ascii 'Z' the last.
+                    int capitalLetter = (number >= 'A' && number <= 'Z');
+
+                    // 'a' is the starting point of small letters in ascii 'Z' the last.
+                    int smallLetter = (number >= 'a' && number <= 'z');
+
+                    // '0' is the starting point of numbers in ascii '9' the last.
+                    int numbersIn64 = (number >= '0' && number <= '9');
+
+                    int specialCharsIn64 = (number == '/' || number == '+');
+                    // beside the letters we have + and / in base 64
+                    if (!capitalLetter && !smallLetter && !numbersIn64 && !specialCharsIn64) {
+                        printf("Invalid character %c in base %d\n", number, base);
+                        break;
+                    }
+
+                    // in the if's bellow, we are subtracting smallest number in the catagories
+                    if (capitalLetter) {
+                        number = number - 'A';
+                    }
+
+                    if (smallLetter) {
+                        number = number - 'a';
+                    }
+
+                    if (numbersIn64) {
+                        /*
+                        to make up for the diff in numbers in base64 and ascii we add the different between
+                        starting point
+                        */
+                        number = number + (START_NUMBERS_RANGE_BASE64 - '0');
+                    }
+
+                    if (specialCharsIn64) {
+
+                        if (number == '+') {
+                            // 62 is the value of + in base64
+                            number = 62;
+
+                        } else if (number == '/') {
+
+                            // 62 is the value of + in base64
+                            number = 63;
+                        }
+                    }
+
+                    convertedNumber = convertedNumber * base + number;
+
+                    // we stop if new line is present. same reason as above comment.
+                } while (number != NEW_LINE_ASCII);
+
+                printf("The number in Decimal is %ld\n", convertedNumber);
+
+                //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
+                char bufferCleaner;
+                scanf("%[^\n]");
+                scanf("%c", &bufferCleaner);
+
                 break;
             }
 
