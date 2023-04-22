@@ -1,10 +1,19 @@
 // (89110, Spring 2023, Assignment #2, Tal Ben Naim, 212749071, bennait3)
 #include <stdio.h>
 
+// general defines
+#define INDEX_OF_LAST_BIT ((sizeof(int) * 8) - 1)
+#define LARGEST_SINGED_INT -2147483648
+#define NEW_LINE_ASCII 10
+
 // defines related to option 1. Hourglass
 #define SAND_ON_TOP '1'
 #define SAND_ON_BOTTOM '0'
 #define MIN_HOURGLASS_SIZE 3
+
+// defines related to option 4. Convert to Decimal
+#define MIN_BASE 2
+#define MAX_BASE 9
 
 int main() {
 
@@ -22,7 +31,8 @@ int main() {
         printf("6. Swap bits\n");
 
         scanf("%c", &choice);
-        // scanf until we see \n, then we save that \n in the buffer cleaner
+
+        //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
         char bufferCleaner;
         scanf("%[^\n]");
         scanf("%c", &bufferCleaner);
@@ -43,7 +53,7 @@ int main() {
                 printf("Enter flag:\n");
                 scanf(" %c", &flag);
 
-                // scanf until we see \n, then we save that \n in the buffer cleaner
+                //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
                 char bufferCleaner;
                 scanf("%[^\n]");
                 scanf("%c", &bufferCleaner);
@@ -169,14 +179,155 @@ int main() {
             }
 
             case '2': {
+                int number, numberSaver;
+                int flippedNumber = 0;
+                int digit = 0;
+
+                // take input from user
+                printf("Enter a number:\n");
+                scanf("%d", &number);
+
+                //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
+                char bufferCleaner;
+                scanf("%[^\n]");
+                scanf("%c", &bufferCleaner);
+
+                for (int i = 0; i < sizeof(int) * 8; i++) {
+
+                    // isolate the digit 1/0 and push all the way to the left
+                    numberSaver = number >> i;
+                    numberSaver = numberSaver << INDEX_OF_LAST_BIT;
+
+                    // digit is on the most left so 1 = largest_signed_int
+                    if (numberSaver == LARGEST_SINGED_INT) {
+                        digit = 1;
+                    } else if (numberSaver == 0) {
+                        digit = 0;
+                    }
+
+                    /*
+                    move one for every difference between the last index and the current one
+                    that way -> push the bit to the right place in the flipped.
+                    */
+                    for (int j = i; j < INDEX_OF_LAST_BIT; j++) {
+                        digit = digit << 1;
+                    }
+                    numberSaver = digit;
+
+                    // flippedNumber starts out as 0,in every index we switch according to the new bit - using |.
+                    flippedNumber = flippedNumber | numberSaver;
+                }
+
+                printf("The reversed number is %d\n", flippedNumber);
+
                 break;
             }
 
             case '3': {
+                int num, numSaver;
+                int digits = 0, reversedNum = 0;
+                printf("Enter a number:\n");
+                scanf(" %d", &num);
+
+                //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
+                char bufferCleaner;
+                scanf("%[^\n]");
+                scanf("%c", &bufferCleaner);
+
+                numSaver = num;
+
+                // this while target is to find how many digits there are in num.
+                while (num != 0) {
+                    num = num / 10; // get num without first digit each time
+                    digits++;
+                }
+
+                num = numSaver;
+
+                for (int i = 0; i < digits; i++) {
+
+                    int power = 1; // neutral to multiplication
+
+                    /*
+                    digits - i to get the digit index.
+                    and -1 to fix counting from 0 for power calc.
+                    */
+                    for (int j = 0; j < digits - i - 1; j++) {
+                        power *= 10; // base for decimal...
+                    }
+
+                    // num % 10 gets the first digit
+                    reversedNum = reversedNum + (num % 10) * power;
+                    num = num / 10; // remove the last digit
+                }
+
+                printf("The reversed number is %d\n", reversedNum);
                 break;
             }
 
             case '4': {
+
+                printf("Enter base:\n");
+                int base;
+
+                scanf(" %d", &base);
+
+                // if the base is not in the bases supported ranged.
+                if (base < MIN_BASE || base > MAX_BASE) {
+                    printf("Invalid Base\n");
+                    break;
+                }
+
+                //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
+                char bufferCleaner;
+                scanf("%[^\n]");
+                scanf("%c", &bufferCleaner);
+
+                printf("Enter a number:\n");
+                char number;
+
+                int invalidBase = 0;
+                int convertedNumber = 0;
+                int power = 1; // neutral to multiplication
+                int length = 0;
+
+                // run over the input until it's empty, each time we get the char to work with
+                do {
+                    scanf("%c", &number);
+
+                    // if input is empty (user have to press "enter" and create a new line to end)
+                    if (number == NEW_LINE_ASCII) {
+                        continue;
+                    }
+
+                    // '0' is the starting point of numbers in ascii.
+                    if (number < '0' || number >= (base + '0')) {
+                        printf("Invalid character %c in base %d\n", number, base);
+                        invalidBase = 1;
+                        break;
+                    }
+
+                    power = 1; // reset power every time
+                    if (length == 0) {
+                        power = 1; // base x power 0 is 1; (no matter what x is)
+                    } else {
+                        for (int i = 0; i < length; i++) {
+                            power *= base;
+                        }
+                    }
+
+                    convertedNumber += power;
+
+                    length++;
+                    // we stop if new line is present. same reason as above comment.
+                } while (number != NEW_LINE_ASCII);
+
+                // if the base is invalid we break again cause one break won't exit the main switch.
+                if (invalidBase) {
+                    break;
+                }
+
+                printf("The converted number is %u\n", convertedNumber);
                 break;
             }
 
