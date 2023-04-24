@@ -409,6 +409,29 @@ int main() {
             }
 
             case '6': {
+                printf("Enter a number:\n");
+                unsigned int number;
+                scanf(" %u", &number);
+
+                printf("Enter indexes:\n");
+
+                int firstIndex, secondIndex;
+                scanf("%d", &firstIndex);
+                scanf("%d", &secondIndex);
+
+                //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
+                char bufferCleaner;
+                scanf("%[^\n]");
+                scanf("%c", &bufferCleaner);
+
+                int validFirstIndex = (firstIndex >= 0 && firstIndex <= INDEX_OF_LAST_BIT);
+                int validSecondIndex = (secondIndex >= 0 && secondIndex <= INDEX_OF_LAST_BIT);
+                if (!validFirstIndex || !validSecondIndex) {
+                    printf("Invalid indexes\n");
+                    break;
+                }
+                // isolate the bits in the index
+
                 break;
             }
 
