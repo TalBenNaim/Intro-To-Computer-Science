@@ -281,6 +281,10 @@ int main() {
                 // if the base is not in the bases supported ranged.
                 if (base < MIN_BASE || base > MAX_BASE) {
                     printf("Invalid Base\n");
+                    //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
+                    char bufferCleanerIf;
+                    scanf("%*[^\n]");
+                    scanf("%c", &bufferCleanerIf);
                     break;
                 }
 
@@ -340,7 +344,7 @@ int main() {
 
                 char number;
                 int base = 64;
-                long convertedNumber = 0;
+                long long convertedNumber = 0;
 
                 // run over the input until it's empty, each time we get the char to work with
                 do {
@@ -408,7 +412,7 @@ int main() {
                     // we stop if new line is present. same reason as above comment.
                 } while (number != NEW_LINE_ASCII);
 
-                printf("The converted number is %ld\n", convertedNumber);
+                printf("The converted number is %lld\n", convertedNumber);
 
                 break;
             }
@@ -444,7 +448,7 @@ int main() {
                 }
 
                 // isolate the bits in their index
-                int theBitInFirstIndex, theBitInSecondIndex;
+                unsigned int theBitInFirstIndex, theBitInSecondIndex;
 
                 // move the bits in their index to the most right
                 theBitInFirstIndex = number >> firstIndex;
@@ -478,12 +482,12 @@ int main() {
                 theBitInSecondIndex = theBitInSecondIndex << firstIndex;
 
                 // use xor to "add" them to one number
-                int switchedBitHolder = theBitInFirstIndex ^ theBitInSecondIndex;
+                unsigned switchedBitHolder = theBitInFirstIndex ^ theBitInSecondIndex;
 
                 // now i return the bits we emptied using OR (|) without changing the original number
                 switchedBitHolder = switchedBitHolder | number;
 
-                printf("The result is %d\n", switchedBitHolder);
+                printf("The result is %u\n", switchedBitHolder);
                 break;
             }
 
