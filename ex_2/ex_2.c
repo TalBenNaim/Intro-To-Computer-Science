@@ -38,7 +38,7 @@ int main() {
 
         //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
         char bufferCleaner;
-        scanf("%[^\n]");
+        scanf("%*[^\n]");
         scanf("%c", &bufferCleaner);
 
         // if the choice is any other char then '0' - '6' its invalid.
@@ -59,7 +59,7 @@ int main() {
 
                 //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
                 char bufferCleaner;
-                scanf("%[^\n]");
+                scanf("%*[^\n]");
                 scanf("%c", &bufferCleaner);
 
                 // size should be bigger than min size, and flag should be either of the one exists.
@@ -193,10 +193,10 @@ int main() {
 
                 //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
                 char bufferCleaner;
-                scanf("%[^\n]");
+                scanf("%*[^\n]");
                 scanf("%c", &bufferCleaner);
 
-                for (int i = 0; i < sizeof(int) * 8; i++) {
+                for (unsigned int i = 0; i < sizeof(int) * 8; i++) {
 
                     // isolate the digit 1/0 and push all the way to the left
                     numberSaver = number >> i;
@@ -213,7 +213,7 @@ int main() {
                     move one for every difference between the last index and the current one
                     that way -> push the bit to the right place in the flipped.
                     */
-                    for (int j = i; j < INDEX_OF_LAST_BIT; j++) {
+                    for (unsigned int j = i; j < INDEX_OF_LAST_BIT; j++) {
                         digit = digit << 1;
                     }
                     numberSaver = digit;
@@ -235,7 +235,7 @@ int main() {
 
                 //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
                 char bufferCleaner;
-                scanf("%[^\n]");
+                scanf("%*[^\n]");
                 scanf("%c", &bufferCleaner);
 
                 numSaver = num;
@@ -284,7 +284,7 @@ int main() {
 
                 //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
                 char bufferCleaner;
-                scanf("%[^\n]");
+                scanf("%*[^\n]");
                 scanf("%c", &bufferCleaner);
 
                 printf("Enter a number:\n");
@@ -325,7 +325,7 @@ int main() {
                 printf("The converted number is %u\n", convertedNumber);
 
                 //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
-                scanf("%[^\n]");
+                scanf("%*[^\n]");
                 scanf("%c", &bufferCleaner);
 
                 break;
@@ -402,7 +402,7 @@ int main() {
 
                 //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
                 char bufferCleaner;
-                scanf("%[^\n]");
+                scanf("%*[^\n]");
                 scanf("%c", &bufferCleaner);
 
                 break;
@@ -421,12 +421,12 @@ int main() {
 
                 //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
                 char bufferCleaner;
-                scanf("%[^\n]");
+                scanf("%*[^\n]");
                 scanf("%c", &bufferCleaner);
 
                 // check if the index is between 0-31 (valid index for unsigned int)
-                int validFirstIndex = (firstIndex >= 0 && firstIndex <= INDEX_OF_LAST_BIT);
-                int validSecondIndex = (secondIndex >= 0 && secondIndex <= INDEX_OF_LAST_BIT);
+                unsigned int validFirstIndex = (firstIndex >= 0 && firstIndex <= INDEX_OF_LAST_BIT);
+                unsigned int validSecondIndex = (secondIndex >= 0 && secondIndex <= INDEX_OF_LAST_BIT);
 
                 if (!validFirstIndex || !validSecondIndex) {
                     printf("Invalid indexes\n");
