@@ -127,9 +127,11 @@ int main() {
                         printf(" ");
                     }
 
-                    spacesToPrint--;
                     printf("X\n");
                 }
+
+                // need to remove one space to equalize the lines
+                spacesToPrint--;
 
                 // create the second half of the hourglass
                 for (int i = 0; i < timeToRun; i++) {
@@ -324,10 +326,6 @@ int main() {
 
                 printf("The converted number is %u\n", convertedNumber);
 
-                //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
-                scanf("%*[^\n]");
-                scanf("%c", &bufferCleaner);
-
                 break;
             }
 
@@ -425,8 +423,8 @@ int main() {
                 scanf("%c", &bufferCleaner);
 
                 // check if the index is between 0-31 (valid index for unsigned int)
-                unsigned int validFirstIndex = (firstIndex >= 0 && firstIndex <= INDEX_OF_LAST_BIT);
-                unsigned int validSecondIndex = (secondIndex >= 0 && secondIndex <= INDEX_OF_LAST_BIT);
+                int validFirstIndex = (firstIndex >= 0 && firstIndex <= (int)INDEX_OF_LAST_BIT);
+                int validSecondIndex = (secondIndex >= 0 && secondIndex <= (int)INDEX_OF_LAST_BIT);
 
                 if (!validFirstIndex || !validSecondIndex) {
                     printf("Invalid indexes\n");
