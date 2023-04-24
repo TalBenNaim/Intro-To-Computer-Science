@@ -424,14 +424,61 @@ int main() {
                 scanf("%[^\n]");
                 scanf("%c", &bufferCleaner);
 
+                // check if the index is between 0-31 (valid index for unsigned int)
                 int validFirstIndex = (firstIndex >= 0 && firstIndex <= INDEX_OF_LAST_BIT);
                 int validSecondIndex = (secondIndex >= 0 && secondIndex <= INDEX_OF_LAST_BIT);
+
                 if (!validFirstIndex || !validSecondIndex) {
                     printf("Invalid indexes\n");
                     break;
                 }
-                // isolate the bits in the index
 
+                if (firstIndex == secondIndex) {
+                    printf("The result is %d\n", number);
+                    break;
+                }
+
+                // isolate the bits in their index
+                int theBitInFirstIndex, theBitInSecondIndex;
+
+                // move the bits in their index to the most right
+                theBitInFirstIndex = number >> firstIndex;
+                theBitInSecondIndex = number >> secondIndex;
+
+                // masking with 1, removing all the bits but the most right bit, which is the bit in the index.
+                theBitInFirstIndex = theBitInFirstIndex & 1;
+                theBitInSecondIndex = theBitInSecondIndex & 1;
+
+                // move the bits back to their original index.
+                theBitInFirstIndex = theBitInFirstIndex << firstIndex;
+                theBitInSecondIndex = theBitInSecondIndex << secondIndex;
+
+                /*
+                remove the bits in the first and second index in the original number.
+                by using XOR (^) I can do that.
+                theBitInFirstIndex and theBitInSecondIndex contain the bit in the index isolated and in the original
+                index. beside that index everything else is 0. 0 ^ 0 = 1, 1 ^ 0 = 1.
+                thus original number wont change.
+                */
+
+                number = theBitInFirstIndex ^ number;
+
+                number = theBitInSecondIndex ^ number;
+
+                // move each bit to the other index
+                theBitInFirstIndex = theBitInFirstIndex >> firstIndex;
+                theBitInFirstIndex = theBitInFirstIndex << secondIndex;
+
+                theBitInSecondIndex = theBitInSecondIndex >> secondIndex;
+                theBitInSecondIndex = theBitInSecondIndex << firstIndex;
+
+                // use xor to "add" them to one number
+                int switchedBitHolder = theBitInFirstIndex ^ theBitInSecondIndex;
+
+                // now i return the bits we emptied using OR (|) without changing the original number
+                switchedBitHolder = switchedBitHolder | number;
+
+                printf("The result is %d\n", switchedBitHolder);
                 break;
             }
 
