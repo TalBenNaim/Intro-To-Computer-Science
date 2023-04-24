@@ -321,6 +321,12 @@ int main() {
 
                 // if the base is invalid we break again cause one break won't exit the main switch.
                 if (invalidBase) {
+
+                    //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
+                    char bufferCleaner;
+                    scanf("%*[^\n]");
+                    scanf("%c", &bufferCleaner);
+
                     break;
                 }
 
@@ -330,7 +336,7 @@ int main() {
             }
 
             case '5': {
-                printf("Enter a number in base 64:\n");
+                printf("Enter a number:\n");
 
                 char number;
                 int base = 64;
@@ -358,6 +364,12 @@ int main() {
                     // beside the letters we have + and / in base 64
                     if (!capitalLetter && !smallLetter && !numbersIn64 && !specialCharsIn64) {
                         printf("Invalid character %c in base %d\n", number, base);
+
+                        //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
+                        char bufferCleaner;
+                        scanf("%*[^\n]");
+                        scanf("%c", &bufferCleaner);
+
                         break;
                     }
 
@@ -396,12 +408,7 @@ int main() {
                     // we stop if new line is present. same reason as above comment.
                 } while (number != NEW_LINE_ASCII);
 
-                printf("The number in Decimal is %ld\n", convertedNumber);
-
-                //  to clean the buffer: scanf until we see \n, then we save that \n in the buffer cleaner
-                char bufferCleaner;
-                scanf("%*[^\n]");
-                scanf("%c", &bufferCleaner);
+                printf("The converted number is %ld\n", convertedNumber);
 
                 break;
             }
