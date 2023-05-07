@@ -42,7 +42,7 @@ unsigned long sumDigitsPowerLength(unsigned int number, unsigned int digitsCount
 
 void isCoolNumber();
 void changeToDigitsArray(unsigned int array[], unsigned int number, unsigned int digitCount, int base);
-int coolNumberLogic(unsigned int array[], unsigned int digitsCount, int number);
+int coolNumberLogic(unsigned int array[], unsigned int digitsCount, unsigned long number);
 
 void printPathsCount();
 unsigned long countPaths(unsigned int width, unsigned int height, int moveLimit, int movesRight, int movesDown);
@@ -70,7 +70,7 @@ int main() {
         // depending on the user's choice navigate the user to the right program.
         switch (choice) {
             case '1':
-                // expressionEvaluator();
+                expressionEvaluator();
                 break;
             case '2':
                 findBinaryStrings();
@@ -226,7 +226,7 @@ void changeToDigitsArray(unsigned int array[], unsigned int number, unsigned int
     if (digitsCount == 0) {
         array[0] = 0;
     } else {
-        for (int i = 0; i < digitsCount; i++) {
+        for (unsigned int i = 0; i < digitsCount; i++) {
             // get the digit
             array[i] = number % base;
 
@@ -249,7 +249,7 @@ unsigned int reverseNumber(unsigned int number, unsigned int digitsCount, int ba
 
     unsigned int reversedNum = 0;
 
-    for (int i = 0; i < digitsCount; i++) {
+    for (unsigned int i = 0; i < digitsCount; i++) {
 
         int power = 1; // neutral to multiplication
 
@@ -257,7 +257,7 @@ unsigned int reverseNumber(unsigned int number, unsigned int digitsCount, int ba
         digits - i to get the digit index.
         and -1 to fix counting from 0 for power calc.
         */
-        for (int j = 0; j < digitsCount - i - 1; j++) {
+        for (unsigned int j = 0; j < digitsCount - i - 1; j++) {
             power *= base;
         }
 
@@ -311,7 +311,7 @@ void findBinaryStrings() {
     cleanBuffer();
 
     // if the length isn't within the allowed range, inform the user.
-    if (length < START_RANGE_BINARY_STRINGS || length > END_RANGE_BINARY_STRINGS) {
+    if (length < START_RANGE_BINARY_STRINGS || (unsigned)length > END_RANGE_BINARY_STRINGS) {
         printf("Invalid length\n");
         return;
     } else {
@@ -507,7 +507,7 @@ void isCoolNumber() {
  *
  * @return 0 if the number is not cool, 1 if it's.
  */
-int coolNumberLogic(unsigned int array[], unsigned int digitsCount, int number) {
+int coolNumberLogic(unsigned int array[], unsigned int digitsCount, unsigned long number) {
     // variable to sum the additive
     unsigned long sum;
 
@@ -522,7 +522,7 @@ int coolNumberLogic(unsigned int array[], unsigned int digitsCount, int number) 
         // each time reset the sum to have a clean sum
         sum = 0;
         // the inner loop is to sum the digits according to the definition of cool number.
-        for (int i = 0; i < digitsCount; i++) {
+        for (unsigned int i = 0; i < digitsCount; i++) {
             sum = sum + array[i];
 
             // exit case! if sum = number it's a cool number.
@@ -592,7 +592,7 @@ unsigned long countPaths(unsigned int width, unsigned int height, int moveLimit,
     }
 
     // if we exceed moves it's an invalid path. also -1 move right.
-    if (movesRight > width - 1 || movesDown > height - 1) {
+    if ((unsigned)movesRight > width - 1 || (unsigned)movesDown > height - 1) {
         return 0;
     }
 
@@ -614,4 +614,15 @@ unsigned long countPaths(unsigned int width, unsigned int height, int moveLimit,
 
     // sum up with all the calls, in the end we get the paths we want.
     return paths;
+}
+
+// quick one for submit rn
+void expressionEvaluator() {
+    printf("Enter an expression:\n");
+
+    unsigned int number;
+    scanf(" %d", &number);
+
+    // make sure we are leaving an empty buffer after the scan.
+    cleanBuffer();
 }
