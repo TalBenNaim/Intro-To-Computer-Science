@@ -5,11 +5,12 @@
 
 // defines related to option 3. BINARY STRINGS
 #define START_RANGE_BINARY_STRINGS 1
-#define END_RANGE_BINARY_STRINGS 32
+#define END_RANGE_BINARY_STRINGS sizeof(int) * 8
 
 // 10 is the optimal array length - 10 digits of unsigned int.
 #define ARRAY_LENGTH 10
 #define DECIMAL_BASE 10
+#define BINARY_BASE 2
 
 // Functions declaration.
 
@@ -18,21 +19,20 @@ void printMenu();
 void cleanBuffer();
 int isOptionValid(char option);
 
-int isThereReminder(int number, int divideBy);
-
 unsigned int countDigits(int number, int base);
 
 int power(int number, int powerBy);
 
 unsigned int reverseNumber(unsigned int number, unsigned int digitsCount, int base);
 
-void shiftArrayToLeft(unsigned int array[], int arrayLength);
+void printBinary(long number, int length);
 
 // All the options
 void expressionEvaluator();
 
 void findBinaryStrings();
 void binaryStringsLogic(int length);
+int consecutiveOnes(long number);
 
 void isExcitingNumber();
 unsigned long sumDigitsPowerLength(unsigned int number, unsigned int digitsCount, int base);
@@ -69,7 +69,7 @@ int main() {
                 // expressionEvaluator();
                 break;
             case '2':
-                // findBinaryStrings();
+                findBinaryStrings();
                 break;
             case '3':
                 isExcitingNumber();
@@ -118,21 +118,6 @@ void cleanBuffer() {
 }
 
 /**
- * @brief check if there is a reminder when we divide the number with the divideBy number.
- *
- * @param number the number we are dividing
- *
- * @param divideBy the number we divide by
- *
- * @return return the reminder if there is no reminder we will get 0.
- * which acts as false for the if statement.
- * (any number other than 0 will be seen as "TRUE" in an if statement).
- */
-int isThereReminder(int number, int divideBy) {
-    return number % divideBy;
-}
-
-/**
  * @brief check if user's input is a valid option.
  *
  * @param the user's option
@@ -159,6 +144,12 @@ int isOptionValid(char option) {
 unsigned int countDigits(int number, int base) {
     // variable to sum all the digits. start at 0 so we can calc.
     static unsigned int sum = 0;
+
+    // when we get 0 from the start
+    if (number == 0 && sum == 0) {
+        // 0 -> 1 digits.
+        return 1;
+    }
 
     /*
     the sumSaver is here to save the sum we got after all the calc.
@@ -275,16 +266,28 @@ unsigned int reverseNumber(unsigned int number, unsigned int digitsCount, int ba
 }
 
 /**
- * @brief this function shift the given array one cell to the left. (removing the most left cell)
+ * @brief print the given number in binary
  *
- * @param array the given array to move
- * @param arrayLength the length of the array
+ * @param number the number to print in binary
+ * @param length the length of the given number in binary - 1. (for proper shifting)
  */
-void shiftArrayToLeft(unsigned int array[], int arrayLength) {
-    // start from 1 (to get rid of the 0 cell).
-    for (int i = 1; i < arrayLength; i++) {
-        array[i] = array[i - 1];
+void printBinary(long number, int length) {
+    // exit case! when we are out of digits left.
+    if (length == 0) {
+        printf("\n");
+        return;
     }
+
+    // move the the current bit we are looking at (from left to right) all the way to the right;
+    int bit = number >> (length - 1);
+
+    // the reminder of 2 is odd/even and thats dictating the most right bits.
+    int digit = bit % 2;
+
+    printf("%d", digit);
+
+    // each time move the number to the next target digit as well as the length.
+    return printBinary(number, length - 1);
 }
 
 // Important functions for the options.
@@ -308,6 +311,7 @@ void findBinaryStrings() {
         printf("Invalid length\n");
         return;
     } else {
+        // we can activate the logic!
         binaryStringsLogic(length);
     }
 }
@@ -319,10 +323,70 @@ void findBinaryStrings() {
  * @param length The length of strings to print.
  */
 void binaryStringsLogic(int length) {
+    // we are using this number to run through all the numbers from 0 to how much we need.
+    static long number = 0;
 
-    static unsigned int numberToPrint = 0;
+    // count the digits of the number in binary.
+    int digitsCount = countDigits(number, BINARY_BASE);
 
-    printf("%0*d\n", length, numberToPrint);
+    // print the numbers as long as we are in the range. (same length or below)
+    if (digitsCount <= length) {
+        // if the number doesn't have consecutiveOnes go and print it.
+        if (consecutiveOnes(number) == 0) {
+            // print all the missing zeros if we need to. digitsCount < length.
+            if (digitsCount < length) {
+                printf("%0*d", (length - digitsCount), 0);
+            }
+            // print the number in binary
+            printBinary(number, digitsCount);
+        }
+
+        // move to the next number and check it's conditions. 0,1,2,3 ... as long as digitsCount <= length
+        number++;
+        return binaryStringsLogic(length);
+
+        // exit case! when the number of digits have exceeded the length get out.
+    } else {
+        // reset the number for the next call.
+        number = 0;
+        return;
+    }
+}
+
+/**
+ * @brief this function take the given number and test if within its binary there is 1 after 1.
+ *
+ * @param number The number we are testing
+ *
+ * @return 1 - have within its binary there is 1 after 1. and 0 if doesn't have.
+ */
+int consecutiveOnes(long number) {
+    // count the steps we have done
+    static int counter = 0;
+
+    // exit case, at the end we will get 0 from shifting.
+    if ((number >> counter) == 0) {
+
+        // reset counter;
+        counter = 0;
+        return 0;
+    }
+    // move each time the current bit to the right.
+    int currentBit = number >> counter;
+
+    // we update the counter to look at the bit in the next spot. moving it to the right.
+    counter++;
+    int nextBit = number >> counter;
+
+    // exit case! if the bits in the right is 1 the number is odd and % will return 1.
+    if (currentBit % 2 == 1 && nextBit % 2 == 1) {
+        // reset counter;
+        counter = 0;
+        return 1;
+    } else {
+        // keep going with the same number, counter will keep going and further the func.
+        return consecutiveOnes(number);
+    }
 }
 
 /**
