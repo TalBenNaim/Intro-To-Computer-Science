@@ -12,6 +12,9 @@
 #define DECIMAL_BASE 10
 #define BINARY_BASE 2
 
+// defines related to option 5. COUNT PATHS
+#define MOVE_LIMIT 3
+
 // Functions declaration.
 
 // general functions
@@ -41,7 +44,8 @@ void isCoolNumber();
 void changeToDigitsArray(unsigned int array[], unsigned int number, unsigned int digitCount, int base);
 int coolNumberLogic(unsigned int array[], unsigned int digitsCount, int number);
 
-void countPaths();
+void printPathsCount();
+unsigned long countPaths(unsigned int width, unsigned int height, int moveLimit, int movesRight, int movesDown);
 
 /**
  * @brief Main function that wait for user input to navigate the user
@@ -78,7 +82,7 @@ int main() {
                 isCoolNumber();
                 break;
             case '5':
-                // countPaths();
+                printPathsCount();
                 break;
 
             default:
@@ -543,4 +547,71 @@ int coolNumberLogic(unsigned int array[], unsigned int digitsCount, int number) 
 
     // the only case we get here is if the number is 0. and 0 is a cool number so return 1..
     return 1;
+}
+
+/**
+ * @brief print the number of paths in a table of given size where
+ * the paths is the way for the dog (in the most left upper corner)
+ * to get to the bone (in the most right bottom corner)
+ */
+void printPathsCount() {
+    // take from the user the width and height of the table
+    printf("Enter width and height:\n");
+
+    unsigned width, height;
+    scanf(" %d", &width);
+    scanf(" %d", &height);
+
+    // make sure we are leaving an empty buffer after the scan.
+    cleanBuffer();
+
+    unsigned long paths = countPaths(width, height, MOVE_LIMIT, 0, 0);
+
+    printf("The number of paths is %lu\n", paths);
+}
+
+/**
+ * @brief this function calc the paths in a table of given size where
+ * the paths is the way for the dog (in the most left upper corner)
+ * to get to the bone (in the most right bottom corner)
+ *
+ * @param width the width of the table
+ * @param height the height of the table
+ * @param moveLimit the limit of the moves the dog can move in a row.
+ * @param movesRight count the moves we did to the right - start at 0
+ * @param movesDown count the moves we did down - start at 0
+ *
+ * @return the number of paths.
+ */
+unsigned long countPaths(unsigned int width, unsigned int height, int moveLimit, int movesRight, int movesDown) {
+
+    // exit case! when width or height = 1 there is one path to the bone.
+    if (width == 1 || height == 1) {
+        // also that way we count the times
+        return 1;
+    }
+
+    // if we exceed moves it's an invalid path. also -1 move right.
+    if (movesRight > width - 1 || movesDown > height - 1) {
+        return 0;
+    }
+
+    // count the paths
+    unsigned long paths = 0;
+
+    // if we still yet to exceed the limit, keep going
+    if (movesRight < moveLimit) {
+        // we are going right so remove 1 width each move. and add 1 to right.
+        paths += countPaths(width - 1, height, moveLimit, movesRight + 1, movesDown);
+    }
+
+    // if we still yet to exceed the limit, keep going
+    if (movesDown < moveLimit) {
+        // we are going right so remove 1 height each move. and add 1 to down.
+
+        paths += countPaths(width, height - 1, moveLimit, movesRight, movesDown + 1);
+    }
+
+    // sum up with all the calls, in the end we get the paths we want.
+    return paths;
 }
