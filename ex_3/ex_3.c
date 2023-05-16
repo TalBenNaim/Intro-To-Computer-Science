@@ -3,6 +3,16 @@
 
 // Defines
 
+#define NEW_LINE_ASCII 10
+
+// defines related to option 1. expression evaluator
+
+// a value who is illegal but will put us in the loop to start.
+#define START_VALUE 'S'
+
+// a double value to differentiate from the rest. means error.
+#define ERROR 0.1
+
 // defines related to option 3. BINARY STRINGS
 #define START_RANGE_BINARY_STRINGS 1
 #define END_RANGE_BINARY_STRINGS sizeof(int) * 8
@@ -30,8 +40,14 @@ unsigned int reverseNumber(unsigned int number, unsigned int digitsCount, int ba
 
 void printBinary(long number, int length);
 
+int isNumber(char c);
+
+int isOperator(char c);
+
+double operate(int number, int secNumber, char operator);
 // All the options
 void expressionEvaluator();
+double expressionEvaluatorLogic(char current, char previous, double sum);
 
 void findBinaryStrings();
 void binaryStringsLogic(int length);
@@ -292,6 +308,87 @@ void printBinary(long number, int length) {
 
     // each time move the number to the next target digit as well as the length.
     return printBinary(number, length - 1);
+}
+
+/**
+ * @brief the function check if the given char is a number
+ *
+ * @param c the given char to check
+ *
+ * @return 1 if number 0 if not.
+ */
+int isNumber(char c) {
+
+    // if c between 0 and 9 its a number.
+    if (c >= '0' && c <= '9') {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+/**
+ * @brief the function check if the given char is an operator
+ *
+ * @param c the given char to check
+ *
+ * @return 1 if operator 0 if not
+ */
+int isOperator(char c) {
+    // if c is any of these return 1
+    switch (c) {
+        case '+':
+            return 1;
+            break;
+        case '-':
+            return 1;
+
+            break;
+        case '*':
+            return 1;
+
+            break;
+        case '/':
+            return 1;
+
+            break;
+    }
+    // return 0 if not.
+    return 0;
+}
+
+/**
+ * @brief this function gets two numbers and operate according to the operator
+ *
+ * @param number the first number to start operation
+ * @param secNumber the second number to continue operation
+ *
+ * @return the result from the operation or ERROR.
+ */
+double operate(int number, int secNumber, char operator) {
+    switch (operator) {
+        case '+':
+            return number + secNumber;
+            break;
+        case '-':
+            return number - secNumber;
+
+            break;
+        case '*':
+            return number * secNumber;
+
+            break;
+        case '/':
+            if (secNumber == 0) {
+                return ERROR;
+            } else {
+                return number / secNumber;
+            }
+
+            break;
+    }
+
+    return 0;
 }
 
 // Important functions for the options.
@@ -616,13 +713,66 @@ unsigned long countPaths(unsigned int width, unsigned int height, int moveLimit,
     return paths;
 }
 
-// quick one for submit rn
+/**
+ *  @this function ask for expression from the user.
+ */
 void expressionEvaluator() {
     printf("Enter an expression:\n");
 
-    unsigned int number;
-    scanf(" %d", &number);
+    char c;
+    scanf(" %c", &c);
 
     // make sure we are leaving an empty buffer after the scan.
     cleanBuffer();
+
+    // we put in the start value as well as 0 for the sum. (start from 0).
+
+    // couldn't solve this question. so the trial is in grey to not effect other questions i did do.
+
+    /*
+    double result = expressionEvaluatorLogic(START_VALUE, START_VALUE, 0);
+    printf("The result is :|%f|\n", result);
+    */
 }
+
+/**
+ * @brief this function holds all the logic in the expressionEvaluation.
+ *
+ * @param current the current char we are looking at
+ * @param previous the previous char we're looking at
+ * @param sum the sum of the expression
+ *
+ * @return the sum
+ */
+/*
+double expressionEvaluatorLogic(char current, char previous, double sum) {
+    while (current != NEW_LINE_ASCII) {
+        previous = current;
+
+        scanf("%c", &current);
+
+        if (current == '(') {
+            // at the start of each brackets we reset the sum for this call.
+            sum = 0;
+            expressionEvaluatorLogic(current, previous, sum);
+        }
+
+        if (isNumber(current) == 1) {
+            if (isOperator(previous) == 1) {
+                return current;
+            }
+        }
+
+        if (isOperator(current) == 1) {
+            if (isNumber(previous) == 1) {
+                printf("%d", sum);
+                sum += operate(previous, expressionEvaluatorLogic(current, previous, sum), current);
+            }
+        }
+
+        if (current == ')') {
+            return sum;
+        }
+    }
+}
+*/
