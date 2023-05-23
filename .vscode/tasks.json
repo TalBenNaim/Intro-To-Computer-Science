@@ -7,9 +7,17 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
+                "-Wall",
+                "-Wextra",
+                "-Werror",
+                "-std=c99",
+                "-DROWS=6",
+                "-DCOLS=7",
+                "-DNUM_PLAYERS=2",
+                "-DCONNECT=4",
                 "${file}",
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+                "${fileDirname}/${fileBasenameNoExtension}.exe"
             ],
             "options": {
                 "cwd": "${fileDirname}"

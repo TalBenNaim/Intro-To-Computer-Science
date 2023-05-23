@@ -1,6 +1,9 @@
 {
-  "cSpell.words": ["Struct"],
+  "cSpell.words": [
+    "Struct"
+  ],
   "files.associations": {
-    "stdio.h": "c"
+    "stdio.h": "c",
+    "ex_4.h": "c"
   }
 }
