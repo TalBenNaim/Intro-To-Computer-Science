@@ -1,6 +1,7 @@
 // (89110, Spring 2023, Assignment #3, Tal Ben Naim, 212749071, bennait3)
 
 #include "ex_4.h"
+#include <string.h>
 
 // helper functions declaration
 int playerInRange(int players, int player);
@@ -13,8 +14,6 @@ int horizontalConnect(char board[ROWS][COLS], int rows, int columns, char player
 
 int verticalConnect(char board[ROWS][COLS], int rows, int columns, char player, int connect);
 
-int rightDownDiagConnect(char board[ROWS][COLS], int rows, int columns, char player, int connect);
-
 int checkAllDiagConnect(char board[ROWS][COLS], int rows, int columns, char player, int connect);
 
 int diagConnect(char board[ROWS][COLS], int rows, int columns, char player, int connect, int rowInc, int colInc);
@@ -24,6 +23,22 @@ char getPlayerFromNum(int playerNumber);
 int aDraw(char board[ROWS][COLS], int rows, int columns, int players, int connect);
 
 int haveWin(char board[ROWS][COLS], int rows, int columns, char player, int connect);
+
+int aFloatingCell(char board[ROWS][COLS], int rows, int columns);
+
+char getValueAboveCell(char board[ROWS][COLS], int row, int column);
+
+int replayTheBoard(char board[ROWS][COLS], int rows, int columns, int connect, int moves, char player, int players);
+
+int movesDoneInBoard(char board[ROWS][COLS], int rows, int columns);
+
+int canUndoMove(char board[ROWS][COLS], int rows, int columns, int column);
+
+void encodeRow(const char board[ROWS][COLS], int columns, char *code, int theRow);
+
+char getNumInBase64(int num);
+
+int getDecimalFrom64(char character);
 
 // the main functions.
 
@@ -35,8 +50,10 @@ int haveWin(char board[ROWS][COLS], int rows, int columns, char player, int conn
  * @param columns the number of columns in the board.
  */
 void initBoard(char board[ROWS][COLS], int rows, int columns) {
+    // get each cell
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < columns; j++) {
+            // set the cell content to empty
             board[i][j] = ' ';
         }
     }
@@ -137,17 +154,14 @@ int makeMove(char board[ROWS][COLS], int rows, int columns, int players, char pl
  * @return 0 if the move isn't allowed, and 1 if it is.
  */
 int undoMove(char board[ROWS][COLS], int rows, int columns, int column) {
-    // check if the given column is in the columns range.
-    int isInColRange = numberInRange(column, columns);
+    // check if can undo the move
+    int canUndo = canUndoMove(board, rows, columns, column);
 
-    // get the lowest empty row of the column.
+    // get the lowestEmpty row in the given col.
     int lowestEmptyRow = getLowestEmptyRow(board, column, rows);
 
-    /*
-    if one of the checks doesn't pass, return 0 (we can't do the move).
-    (if the lowestEmptyRow == columns that mean the whole column is empty).
-    */
-    if (isInColRange == 0 || lowestEmptyRow == columns) {
+    // can undo the move
+    if (canUndo == 0) {
         return 0;
     } else {
         // move down one row to the lowestOccupied cell.
@@ -233,15 +247,111 @@ char getWinner(char board[ROWS][COLS], int rows, int columns, int players, int c
     }
 }
 
-/*
+/**
+ * @brief This function gets a board and check if it's valid according to several parameters:
+ * 1. there is a cell with player not in the range
+ * 2. there is a col with a floating player (the cell below is empty).
+ * 3. the is an illegal cell in the board.
+ * 4. the player kept playing even though somebody won. (recreate the game and check).
+ *
+ * @param board the board we are playing on, a 2D char array.
+ * @param rows the number of rows in the board.
+ * @param columns the number of columns in the board.
+ * @param players the amount of players playing the game.
+ * @param connect the connect that is considered as a win
+ *
+ * @return 1 if the board is valid, 0 if the board is invalid.
+ */
 int isValidBoard(char board[ROWS][COLS], int rows, int columns, int players, int connect) {
+    // check if the the board have floating.
+    int haveFloating = aFloatingCell(board, rows, columns);
+
+    // if there is a floating cell the board is invalid.
+    if (haveFloating == 1) {
+        return 0;
+    }
+
+    // look at each cell
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < columns; j++) {
+            char cell = board[i][j];
+            // check if player is in range of players, as well as if the cell content is legal.
+            int isPlayerInRange = playerInRange(players, cell);
+
+            // check if the cell is not empty and also not in the range it's illegal.
+            if (cell != ' ' && isPlayerInRange == 0) {
+                // illegal cell, the board is invalid.
+                return 0;
+            }
+        }
+    }
+
+    // get the moves that have been done
+    int moves = movesDoneInBoard(board, rows, columns);
+
+    // get the last player
+    char lastPlayer = 'A' + (players - 1);
+
+    // check if the board can be replayed
+    int canReplay = replayTheBoard(board, rows, columns, connect, moves, lastPlayer, players);
+
+    // if can't replay return 0
+    if (canReplay == 0) {
+        return 0;
+    }
+
+    // return 1 if any the previous tests did not fail the board.
+    return 1;
 }
 
+/**
+ * @brief this function encode the board into the give code using the following rule
+ * let's say a row is [A,A,A,B,B] the encode will be DACB because there are D (3 in base64)
+ * A in a row in the row, like wise, C(2 in base64) times, B..
+ * then between each row we put /.
+ *
+ * @param board the board we are playing on, a 2D char array.
+ * @param rows the number of rows in the board
+ * @param columns the number of columns in the board
+ * @param code the string to add to the encode.
+ *
+ */
 void encode(const char board[ROWS][COLS], int rows, int columns, char *code) {
+    // go through the rows
+    for (int i = 0; i < rows; i++) {
+        // encode the row i
+        encodeRow(board, columns, code, i);
+        // add a / to represent end of the row.
+        strcat(code, "/");
+    }
+    // at the end of the encode we need to add \0
+    strcat(code, "\0");
 }
 
-void decode(const char *code, char board[ROWS][COLS]){}
-*/
+void decode(const char *code, char board[ROWS][COLS]) {
+    // to save the location of the char we print, to not calc len
+    int lengthOfCode = strlen(code);
+    int notToCalcLength = -1;
+    for (int i = 0; i < lengthOfCode; i++) {
+        int row = 0;
+        if (code[i] == '/') {
+            row++;
+        }
+        // if the char isn't the one not to calc
+        if (notToCalcLength != i && code[i] != '/') {
+
+            int length = getDecimalFrom64(code[i]);
+
+            notToCalcLength = i + 1;
+            char toInsert = code[i + 1];
+            for (int j = 0; j < length; j++) {
+                board[row][j] = toInsert;
+            }
+        } else {
+            notToCalcLength = i + 1;
+        }
+    }
+}
 
 // helper functions
 
@@ -564,4 +674,253 @@ int haveWin(char board[ROWS][COLS], int rows, int columns, char player, int conn
         // no connect = not a winner
         return 0;
     }
+}
+
+/**
+ * @brief this function take a board and check if there is a floating cell in the board
+ *
+ * @param board the board we are playing on, a 2D char array.
+ * @param rows the number of rows in the board.
+ * @param columns the number of columns in the board.
+ *
+ * @return 1 if there is a floating cell and 0 if there isn't a floating cell.
+ */
+int aFloatingCell(char board[ROWS][COLS], int rows, int columns) {
+    // get each cell without the first row, cause we are looking up from empty cell.
+    for (int i = 1; i < rows; i++) {
+        for (int j = 0; j < columns; j++) {
+            // take the cell
+            char cell = board[i][j];
+
+            // if the cell is empty, we need to check there is occupied cells above him.
+            if (cell == ' ') {
+                // get the content of the above cell
+                char cellAboveContent = getValueAboveCell(board, i, j);
+
+                // if the content of the above cell is not empty, and can be reached (not -1) the cell above
+                // floating.
+                if (cellAboveContent != ' ' && cellAboveContent != -1) {
+                    return 1;
+                }
+            }
+        }
+    }
+
+    // if we didn't find any floating cell above, that mean there aren't any.
+    return 0;
+}
+
+/**
+ * @brief this function take a board and a cell, and get the content of the cell above it.
+ *
+ * @param board the board we are playing on, a 2D char array.
+ * @param row the row of the current cell
+ * @param column the column of the current cell
+ *
+ * @return the content of the above cell, or -1 if can't get the cell. (out of bound)
+ */
+char getValueAboveCell(char board[ROWS][COLS], int row, int column) {
+    // only when the cell row is 1 there is no row above.
+    if (row != 0) {
+        return board[row - 1][column];
+    } else {
+        return -1;
+    }
+}
+
+/**
+ * @brief this is a recursive function that tries to replay the board by making the moves backward.
+ *
+ * @param board the board we are playing on, a 2D char array.
+ * @param rows the number of rows in the board
+ * @param columns the number of rows in the board
+ * @param connect the connect that is considered as a win
+ * @param moves the number of moves that have been done in the given board
+ * @param player the player to check the moves on
+ * @param players the amount of players
+ *
+ * @return 1 if we could mimic and 0 if we couldn't mimic the moves.
+ */
+int replayTheBoard(char board[ROWS][COLS], int rows, int columns, int connect, int moves, char player, int players) {
+    // exit case!, if no moves have been done the board is empty and legal, and if we could mimic all the moves.
+    if (moves == 0) {
+        return 1;
+    }
+
+    // loop through the columns and try to undo each action.
+    for (int i = 0; i < columns; i++) {
+        // check if can undo a move with the given player.
+        int canUndo = canUndoMove(board, rows, columns, i);
+
+        // if can't undo the move, return 0 the board isn't valid, cant be replayed.
+        if (canUndo == 0) {
+            return 0;
+        }
+    }
+
+    // got to the first player
+    if (player == 'A') {
+        // reduce the moves by one, and transform the player to the "last" player. (we are going backward).
+        return replayTheBoard(board, rows, columns, connect, moves - 1, player + (players - 1), players);
+    } else {
+        // reduce the moves by one, and transform the player to the previous player. (we are going backward).
+        return replayTheBoard(board, rows, columns, connect, moves - 1, player - 1, players);
+    }
+}
+
+/**
+ * @brief this function counter how many moves have been down in the given board.
+ *
+ * @param board the board we are playing on, a 2D char array.
+ * @param rows the number of rows in the board
+ * @param columns the number of rows in the board
+ *
+ * @return counter - the number of moves done. 0 is non done ofc.
+ */
+int movesDoneInBoard(char board[ROWS][COLS], int rows, int columns) {
+    int counter = 0;
+
+    // get each cell
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < columns; j++) {
+            // the cell
+            char cell = board[i][j];
+
+            // if the cell is empty a move have been done.
+            if (cell != ' ') {
+                counter++;
+            }
+        }
+    }
+
+    return counter;
+}
+
+/**
+ * @brief this function check if a move can be undone on the given column.
+ *
+ * @param board the board we are playing on, a 2D char array.
+ * @param rows the number of rows in the board
+ * @param columns the number of rows in the board
+ * @param column the given column to check the undo on
+ *
+ * @return 1 if can be undone, and 0 if cannot.
+ */
+int canUndoMove(char board[ROWS][COLS], int rows, int columns, int column) {
+
+    int isInColRange = numberInRange(column, columns);
+
+    // get the lowest empty row of the column.
+    int lowestEmptyRow = getLowestEmptyRow(board, column, rows);
+
+    /*
+    if one of the checks doesn't pass, return 0 (we can't do the move).
+    (if the lowestEmptyRow == columns that mean the whole column is empty).
+    */
+    if (isInColRange == 0 || lowestEmptyRow == columns) {
+        return 0;
+    } else {
+        // can be done.
+        return 1;
+    }
+}
+
+/**
+ * @brief this function encode the given row according to the encode rules.
+ * let's say a row is [A,A,A,B,B] the encode will be DACB because there are D (3 in base64)
+ * A in a row in the row, like wise, C(2 in base64) times, B..
+ *
+ * @param board the board we are playing on, a 2D char array.
+ * @param columns the number of columns in the board
+ * @param code the string to add to the encode.
+ * @param theRow the given row to encode in a string manner
+ */
+void encodeRow(const char board[ROWS][COLS], int columns, char *code, int theRow) {
+    // a counter to count occurrences
+    int counter = 0;
+
+    for (int j = 0; j < columns; j++) {
+        // take the content of the cell to check
+        char check = board[theRow][j];
+        counter++;
+
+        // if there is next col
+        if (j + 1 != columns) {
+            // if the curent cell is different from the next, we encode.
+            if (check != board[theRow][j + 1]) {
+                // turn into base64 and make a new string with the base and the char. like the rule
+                char numInBase64 = getNumInBase64(counter);
+                // add the number and check to the new string
+                char newString[] = {numInBase64, check, '\0'};
+                // add the new string to the code.
+                strcat(code, newString);
+                // reset the counter
+                counter = 0;
+            }
+            // check if the last cell is the same as before
+        } else if (check == board[theRow][j - 1]) {
+            // turn into base64 and make a new string with the base and the char. like the rule
+            char numInBase64 = getNumInBase64(counter);
+            // add the number and check to the new string
+            char newString[] = {numInBase64, check, '\0'};
+            // add the new string to the code.
+            strcat(code, newString);
+            // reset the counter
+            counter = 0;
+        } else {
+            // turn into base64 and make a new string with the base and the char. like the rule
+            char numInBase64 = getNumInBase64(counter);
+            // add the number and check to the new string
+            char newString[] = {numInBase64, check, '\0'};
+            // add the new string to the code.
+            strcat(code, newString);
+            // reset the counter
+            counter = 0;
+        }
+    }
+}
+
+/**
+ * @brief this function get a number and return the number in a base 64 digits
+ *
+ * @param number the number to turn into base64
+ *
+ * @return the transformed char from the number.
+ */
+char getNumInBase64(int number) {
+    // the base64 size.. 64
+    const int base64 = 64;
+    // base64 character set
+    const char base64Table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    // to get the index
+    int index = number % base64;
+
+    // get the character from the base64 table
+    char base64Char = base64Table[index];
+
+    return base64Char;
+}
+
+/**
+ * @brief the function get a char and turn it into decimal in base 64
+ *
+ * @param character the char in base to turn into decimal
+ *
+ * @return the number in decimal, else return -1 if couldn't do it
+ */
+int getDecimalFrom64(char character) {
+    // the base64 size.. 64
+    const int base64 = 64;
+    // base64 character set
+    const char base64Table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    // to get the index
+    for (int i = 0; i < base64; i++) {
+        if (base64Table[i] == character) {
+            return i;
+        }
+    }
+
+    return -1;
 }

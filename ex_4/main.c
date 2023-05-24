@@ -30,4 +30,18 @@ int main() {
     } else {
         printf("Winner is '%c'\n", winner);
     }
+    int valid = isValidBoard(board, ROWS, COLS, NUM_PLAYERS, CONNECT);
+    if (valid) {
+        printf("Board is valid\n");
+    } else {
+        printf("Board is invalid\n");
+    }
+    char code[ROWS * COLS + 1];
+
+    encode(board, ROWS, COLS, code);
+    printf("Encoded board: '%s'\n", code);
+
+    char newBoard[ROWS][COLS];
+    decode(code, newBoard);
+    printBoard(newBoard, ROWS, COLS);
 }
