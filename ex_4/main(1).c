@@ -54,6 +54,7 @@ int main() {
     i++; // 10
     undoMove(board, ROWS, COLS, 0) ? printf("%03d. Yes!\n", i) : printf("%03d. Nooooooo!\n", i);
     i++; // 11
+
     undoMove(board, ROWS, COLS, 0) == 0 ? printf("%03d. Yes!\n", i) : printf("%03d. Nooooooo!\n", i);
     i++; // 12
     undoMove(board, ROWS, COLS, -1) == 0 ? printf("%03d. Yes!\n", i) : printf("%03d. Nooooooo!\n", i);
@@ -85,6 +86,7 @@ int main() {
     getWinner(board, ROWS, COLS, 5, 4) == -1 ? printf("%03d. Yes!\n", i) : printf("%03d. Nooooooo!\n", i);
     i++; // 18
     board[5][4] = 'A';
+
     getStatus(board, ROWS, COLS, 3, 4) == 1 ? printf("%03d. Yes!\n", i) : printf("%03d. Nooooooo!\n", i);
     i++; // 19
     getWinner(board, ROWS, COLS, 5, 4) == 'A' ? printf("%03d. Yes!\n", i) : printf("%03d. Nooooooo!\n", i);
@@ -108,6 +110,7 @@ int main() {
     board[4][4] = 'B';
     board[3][4] = 'C';
     board[3][3] = 'D';
+
     getStatus(board, ROWS, COLS, 3, 4) == 1 ? printf("%03d. Yes!\n", i) : printf("%03d. Nooooooo!\n", i);
     i++; // 23
     getWinner(board, ROWS, COLS, 3, 4) == 'D' ? printf("%03d. Yes!\n", i) : printf("%03d. Nooooooo!\n", i);
@@ -138,6 +141,9 @@ int main() {
     board[1][4] = 'D';
     board[0][2] = 'A';
     board[0][4] = 'B';
+
+    printBoard(board, ROWS, COLS);
+
     getStatus(board, ROWS, COLS, 3, 4) == 0 ? printf("%03d. Yes!\n", i) : printf("%03d. Nooooooo!\n", i);
     i++; // 27
     getWinner(board, ROWS, COLS, 3, 4) == -1 ? printf("%03d. Yes!\n", i) : printf("%03d. Nooooooo!\n", i);

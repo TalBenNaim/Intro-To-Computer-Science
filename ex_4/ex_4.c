@@ -1,4 +1,4 @@
-// (89110, Spring 2023, Assignment #3, Tal Ben Naim, 212749071, bennait3)
+// (89110, Spring 2023, Assignment #4, Tal Ben Naim, 212749071, bennait3)
 
 #include "ex_4.h"
 #include <string.h>
@@ -39,6 +39,8 @@ void encodeRow(const char board[ROWS][COLS], int columns, char *code, int theRow
 char getNumInBase64(int num);
 
 int getDecimalFrom64(char character);
+
+int isPlayerAtTop(char board[ROWS][COLS], int rows, char player, int column);
 
 // the main functions.
 
@@ -190,7 +192,7 @@ int undoMove(char board[ROWS][COLS], int rows, int columns, int column) {
  */
 int getStatus(char board[ROWS][COLS], int rows, int columns, int players, int connect) {
     // check if there is a single winner
-    if (getWinner(board, rows, columns, players, connect) == 1) {
+    if (getWinner(board, rows, columns, players, connect) != -1) {
         // return 1 as for the status, the game ended there is winner.
         return 1;
     }
@@ -310,7 +312,7 @@ int isValidBoard(char board[ROWS][COLS], int rows, int columns, int players, int
  * A in a row in the row, like wise, C(2 in base64) times, B..
  * then between each row we put /.
  *
- * @param board the board we are playing on, a 2D char array.
+ * @param board the board we are playing on, a 2D char array, to encode.
  * @param rows the number of rows in the board
  * @param columns the number of columns in the board
  * @param code the string to add to the encode.
@@ -328,27 +330,54 @@ void encode(const char board[ROWS][COLS], int rows, int columns, char *code) {
     strcat(code, "\0");
 }
 
+/**
+ * @brief this function decode the code into the given board using the following rule
+ * let's say a code is DACB/ the decode will be [A,A,A,B,B] because there are D (3 in base64)
+ * A in a row in the row, like wise, C(2 in base64) times, B..
+ * then between each row we put /.
+ *
+ * @param code the string we decode from
+ * @param board the board we are playing on, a 2D char array, we are inserting from the code.
+ *
+ */
 void decode(const char *code, char board[ROWS][COLS]) {
-    // to save the location of the char we print, to not calc len
+    // take the length of the code
     int lengthOfCode = strlen(code);
+
+    // to save the location of the char we print, to not calc len
     int notToCalcLength = -1;
+
+    // we don't know the size of the board so index will help us with pointers
+    int index = 0;
+
+    // check each char in the code
     for (int i = 0; i < lengthOfCode; i++) {
-        int row = 0;
-        if (code[i] == '/') {
-            row++;
-        }
-        // if the char isn't the one not to calc
-        if (notToCalcLength != i && code[i] != '/') {
+        char currentChar = code[i];
 
-            int length = getDecimalFrom64(code[i]);
+        // if the char isn't the one not to calc or its end of line
+        if (notToCalcLength != i && currentChar != '/') {
+            // the first char will always be the times to print the one following so get the decimal from in base 64.
+            int length = getDecimalFrom64(currentChar);
 
+            /*
+            the next char is the one we are printing, we dont have to worry about i+1 not existing because the last
+            char is always /
+            */
             notToCalcLength = i + 1;
             char toInsert = code[i + 1];
-            for (int j = 0; j < length; j++) {
-                board[row][j] = toInsert;
+
+            // save the length before looping
+            int lengthToRun = length + index;
+            for (int j = index; j < lengthToRun; j++) {
+                // accessing the board array using pointer arithmetic
+                char *currentElement = &board[0][0] + j;
+
+                // modify the element at the current position
+                *currentElement = toInsert;
+
+                // each modification moves one next on the index.
+                index++;
             }
-        } else {
-            notToCalcLength = i + 1;
         }
     }
 }
@@ -752,6 +781,14 @@ int replayTheBoard(char board[ROWS][COLS], int rows, int columns, int connect, i
         // check if can undo a move with the given player.
         int canUndo = canUndoMove(board, rows, columns, i);
 
+        // if the player is the one on top
+        int atTop = isPlayerAtTop(board, rows, player, i);
+
+        // if can undo and the current player is the one on top, move on.
+        if (canUndo && atTop) {
+            break;
+        }
+
         // if can't undo the move, return 0 the board isn't valid, cant be replayed.
         if (canUndo == 0) {
             return 0;
@@ -815,9 +852,9 @@ int canUndoMove(char board[ROWS][COLS], int rows, int columns, int column) {
 
     /*
     if one of the checks doesn't pass, return 0 (we can't do the move).
-    (if the lowestEmptyRow == columns that mean the whole column is empty).
+    (if the lowestEmptyRow == rows - 1 that mean the whole column is empty).
     */
-    if (isInColRange == 0 || lowestEmptyRow == columns) {
+    if (isInColRange == 0 || lowestEmptyRow == (rows - 1)) {
         return 0;
     } else {
         // can be done.
@@ -923,4 +960,29 @@ int getDecimalFrom64(char character) {
     }
 
     return -1;
+}
+
+/**
+ * @brief this function checks if the given player is on top of the possible col to undo a move on.
+ *
+ * @param board the board we are playing on, a 2D char array.
+ * @param rows the number of rows in the board.
+ * @param player the given player to check
+ * @param column the col to check
+ *
+ * @return 1 if the player is, else 0.
+ */
+int isPlayerAtTop(char board[ROWS][COLS], int rows, char player, int column) {
+    // get lowestEmptyRow
+    int lowestEmptyRow = getLowestEmptyRow(board, column, rows);
+
+    // get the cell below to get the cell on top
+    int cellBelow = board[lowestEmptyRow + 1][column];
+
+    // if the cell at top == player return 1
+    if (cellBelow == player) {
+        return 1;
+    } else {
+        return 0;
+    }
 }

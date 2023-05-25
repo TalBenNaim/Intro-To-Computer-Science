@@ -37,11 +37,14 @@ int main() {
         printf("Board is invalid\n");
     }
     char code[ROWS * COLS + 1];
-
     encode(board, ROWS, COLS, code);
     printf("Encoded board: '%s'\n", code);
-
     char newBoard[ROWS][COLS];
     decode(code, newBoard);
     printBoard(newBoard, ROWS, COLS);
+    char board2[ROWS][COLS] = {
+        {' ', ' ', ' ', ' ', ' ', ' ', ' '}, {' ', ' ', ' ', ' ', ' ', ' ', ' '}, {' ', ' ', 'A', ' ', ' ', ' ', ' '},
+        {' ', ' ', 'B', ' ', ' ', ' ', ' '}, {' ', ' ', 'A', ' ', ' ', ' ', ' '}, {' ', ' ', 'B', ' ', ' ', ' ', ' '},
+    };
+    printBoard(board2, ROWS, COLS);
 }
