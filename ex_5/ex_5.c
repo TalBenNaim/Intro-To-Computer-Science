@@ -37,10 +37,10 @@ void printMenu();
 void cleanBuffer();
 int isChoiceValid(char option);
 int isAccountNumExists(unsigned int accountNumber);
-void freeBankMemo(Bank *bank);
+void freeAllNode(Node *node);
 
 // -> Main missions funcs
-void createAccount();
+void createAccount(Bank *bank);
 
 /**
  * @brief Main function that wait for user input to navigate the user
@@ -48,8 +48,10 @@ void createAccount();
  * @return 0 if the program runs successfully
  */
 int main() {
-    // create the bank for this run, allocate memory for accounts and transactions in the bank.
+    // create the bank for this run, allocate memory and set a default NULL value for the fields.
     Bank *bank = (Bank *)malloc(sizeof(Bank));
+    bank->accounts = NULL;
+    bank->transactions = NULL;
 
     // save the option the user picked, initalized to 1 to enter while loop.
     char choice = 1;
@@ -69,7 +71,7 @@ int main() {
         // depending on the user's choice navigate the user to the right program.
         switch (choice) {
             case '1':
-                createAccount();
+                createAccount(bank);
                 break;
             case '2':
                 break;
@@ -87,7 +89,11 @@ int main() {
         }
     }
 
-    freeBankMemo(bank);
+    // free all the other things before just check
+
+    // free bank
+    free(bank);
+
     return 0;
 }
 
@@ -127,7 +133,7 @@ void cleanBuffer() {
  * @return 1 for valid input, 0 for invalid.
  */
 int isChoiceValid(char choice) {
-    // This program options range is 0 - 5.
+    // This program options range is 0 - 6.
     if (choice < '0' || choice > '6') {
         return 0;
     } else {
@@ -136,9 +142,21 @@ int isChoiceValid(char choice) {
 }
 
 /**
- * @brief Free the memory in the bank.
+ * @brief Free all the nodes in the given linked list pointer
+ *
+ * @param node The pointer to the node instance
  */
-void freeBankMemo(Bank *bank) {
+void freeAllNode(Node *node) {
+    // if the node exists
+    if (node) {
+        // free the next node recursively
+        freeAllNode(node->next);
+        // free the current node
+        free(node);
+
+        // after freeing the current node, exit the func
+        return;
+    }
 }
 
 /**
@@ -157,7 +175,7 @@ int isAccountNumExists(unsigned int accountNumber) {
  * @brief Create an account with the user's choice of number of name.
  *
  */
-void createAccount() {
+void createAccount(Bank *bank) {
 
     printf("Enter account number:\n");
 
