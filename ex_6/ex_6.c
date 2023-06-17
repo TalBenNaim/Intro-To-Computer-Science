@@ -5,15 +5,10 @@
 #include <string.h>
 
 // Structs
-typedef struct Node {
-    void *data;
-    struct Node *next;
-} Node;
-
 typedef struct Human {
     char *name;
     unsigned int age;
-    Node *firstChild;
+    struct Human *firstChild;
     struct Human *partner;
     struct Human *parent1;
     struct Human *parent2;
@@ -31,7 +26,9 @@ typedef struct FamilyHead {
 void printMenu();
 void cleanBuffer();
 int isChoiceValid(char option);
-Human *getHumansInTree(FamilyHead firstHuman);
+Human *getHumansInTree(FamilyHead *famHead, unsigned int index);
+void addHumansBelow(Human *human, Human *array, unsigned int index);
+int elementInArray(void *array, void *element, unsigned int arrayLength);
 
 /**
  * @brief Main function that wait for user input to navigate the user
@@ -129,12 +126,63 @@ int isChoiceValid(char choice) {
 
 /**
  * @brief save the pointers to every human in the current family tree.
+ * if memory allocation fail we exit the program.
  *
  * @param firstHuman the first human created in this family tree.
+ * @param index The starting index for the array to start at.
  *
  * @return a pointer to the array containing all the pointers to each human in the tree.
  */
-Human *getHumansInTree(FamilyHead firstHuman) {
+Human *getHumansInTree(FamilyHead *famHead, unsigned int index) {
     // the array of pointers we return
-    Human *humansInTree;
+    Human *humansInTree = (Human *)malloc(sizeof(Human));
+    if (humansInTree == NULL) {
+        exit(1);
+    }
+
+    if (famHead != NULL) {
+        // check if famHead in array if not then add to array
+
+        // send his firstChild to get further
+        addHumansBelow(famHead->properties->firstChild, humansInTree, index);
+
+        // get the next familyHead
+        return getHumansInTree(famHead->next, index);
+    }
+
+    return humansInTree;
 }
+
+void addHumansBelow(Human *human, Human *array, unsigned int index) {
+
+    if (human != NULL) {
+        // check if human in array if not then add to array
+
+        // send his firstChild to get further
+        addHumansBelow(human->firstChild, array, index);
+
+        // send his next sibling to get further
+        addHumansBelow(human->sibling, array, index);
+
+        // after adding exit the func
+        return;
+    }
+}
+
+int elementInArray(void *array, void *element, unsigned int arrayLength) {
+}
+
+/*
+void freeAllNode(Node *node) {
+    // if the node exists
+    if (node == NULL) {
+        // free the next node recursively
+        freeAllNode(node->next);
+        // free the current node
+        free(node);
+
+        // after freeing the current node, exit the func
+        return;
+    }
+}
+*/
