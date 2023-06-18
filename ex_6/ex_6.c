@@ -359,12 +359,22 @@ void createFamilyHead(FamilyHead *firstHuman){
     if(firstHuman->properties == NULL){
         firstHuman->properties = newHumanPointer;
 
-        // not the first? save in the last node of the familyHead
+        // not the first? get the last node of the familyHead and add to it the new one
     }else{
-        FamilyHead *lastPointer = lastFamilyHead(firstHuman);
+        // create the newHead
+        FamilyHead *newHead = (FamilyHead *)malloc(sizeof(FamilyHead));
+        if (newHead == NULL) {
+            exit(1);
+        }
 
+        // reset the properites to new pointer and next to null
+        newHead->properties = newHumanPointer;
+        newHead ->next = NULL; 
+
+        FamilyHead *lastPointer = lastFamilyHead(firstHuman);
+        
         // add the human to the last node of the familyHead.
-        lastPointer -> properties = newHumanPointer;
+        lastPointer -> next = newHead;
     }
 
     // create the human with name and age, everything else is null, and put in the new pointer.
