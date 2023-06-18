@@ -26,9 +26,8 @@ typedef struct FamilyHead {
 void printMenu();
 void cleanBuffer();
 int isChoiceValid(char option);
-Human *getHumansInTree(FamilyHead *famHead, unsigned int index);
-void addHumansBelow(Human *human, Human *array, unsigned int index);
-int elementInArray(void *array, void *element, unsigned int arrayLength);
+void scanTree(FamilyHead *firstHuman);
+void scanTreeFurther(Human *human, Human dontScanAgain[], unsigned int index);
 
 /**
  * @brief Main function that wait for user input to navigate the user
@@ -116,6 +115,7 @@ void cleanBuffer() {
  * @return 1 for valid input, 0 for invalid.
  */
 int isChoiceValid(char choice) {
+
     // This program options range is 0 - 7.
     if (choice < '0' || choice > '7') {
         return 0;
@@ -125,64 +125,47 @@ int isChoiceValid(char choice) {
 }
 
 /**
- * @brief save the pointers to every human in the current family tree.
- * if memory allocation fail we exit the program.
- *
- * @param firstHuman the first human created in this family tree.
- * @param index The starting index for the array to start at.
- *
- * @return a pointer to the array containing all the pointers to each human in the tree.
- */
-Human *getHumansInTree(FamilyHead *famHead, unsigned int index) {
-    // the array of pointers we return
-    Human *humansInTree = (Human *)malloc(sizeof(Human));
-    if (humansInTree == NULL) {
-        exit(1);
-    }
-
-    if (famHead != NULL) {
-        // check if famHead in array if not then add to array
-
-        // send his firstChild to get further
-        addHumansBelow(famHead->properties->firstChild, humansInTree, index);
-
-        // get the next familyHead
-        return getHumansInTree(famHead->next, index);
-    }
-
-    return humansInTree;
-}
-
-void addHumansBelow(Human *human, Human *array, unsigned int index) {
-
-    if (human != NULL) {
-        // check if human in array if not then add to array
-
-        // send his firstChild to get further
-        addHumansBelow(human->firstChild, array, index);
-
-        // send his next sibling to get further
-        addHumansBelow(human->sibling, array, index);
-
-        // after adding exit the func
-        return;
-    }
-}
-
-int elementInArray(void *array, void *element, unsigned int arrayLength) {
-}
-
-/*
-void freeAllNode(Node *node) {
-    // if the node exists
-    if (node == NULL) {
-        // free the next node recursively
-        freeAllNode(node->next);
-        // free the current node
-        free(node);
-
-        // after freeing the current node, exit the func
-        return;
-    }
-}
+ * @brief this function scans the tree, visiting every memeber without repetition
+ * 
+ * @param firstHuman the first family head in the whole tree.
+ * 
 */
+void scanTree(FamilyHead *firstHuman){
+    // look at each familyHead - it's firstHuman right now
+    // do something according to what we want
+    if(firstHuman != NULL){
+        // for now just print the name of the human
+        printf("%s",firstHuman->properties->name);
+
+        // send the next FH
+        scanTree(firstHuman->next);
+
+        // create an array of humans to not scan again, empty for now
+        Human dontScanAgain[];
+        static unsigned index = 0;
+        // send his firstChild to the scanTreeFurther   
+        scanTreeFurther(firstHuman->properties->firstChild, dontScanAgain, index);
+
+        return;
+    }
+}
+
+/**
+ * @brief this function scan the tree further, all the memebers after each family head
+ * 
+ * @param human the human to scan
+ * @param dontScanAgain an array to save the humans we don't want to scan again. (if we won't through them).
+*/
+void scanTreeFurther(Human *human, Human dontScanAgain[], unsigned int index){
+    if(human != NULL){
+        // add him to the dontScanAgain array
+
+        // send this human firstChild to scanTreeFurther
+        scanTreeFurther(human->firstChild,dontScanAgain);
+
+        // send this human siblings to scanTreeFurther
+        scanTreeFurther(human->sibling, dontScanAgain);
+
+    }
+
+}
