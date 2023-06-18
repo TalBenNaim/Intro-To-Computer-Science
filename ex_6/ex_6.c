@@ -34,9 +34,11 @@ void scanTree(FamilyHead *firstHuman);
 void scanTreeFurther(Human *human, Human **dontScanAgain, unsigned int index);
 char *stringFromUser();
 int isPtrInArray(Human **arrayOfPtr, void *ptr, unsigned int arrayLength);
+void sendToAction(void *ptr,char * action);
 
 // -> Missions funcs
 void createFamilyHead(FamilyHead *firstHuman);
+void marryTwoHumans();
 
 /**
  * @brief Main function that wait for user input to navigate the user
@@ -162,7 +164,6 @@ void sendToMission(char choice, FamilyHead *firstHuman){
 */
 void scanTree(FamilyHead *firstHuman){
     // look at each familyHead - it's firstHuman right now
-    // do something according to what we want
     if(firstHuman != NULL){
         // for now just print the age of the human
         printf("%s",firstHuman->properties->name);
@@ -313,6 +314,7 @@ FamilyHead *lastFamilyHead(FamilyHead *firstHuman) {
  * @param source contains the info we want
 */
 void updateHuman(Human *toUpdate, Human source){
+    // update each property
     toUpdate -> age = source.age;
     toUpdate -> name = source.name;
     toUpdate -> firstChild = source.firstChild;
@@ -323,6 +325,15 @@ void updateHuman(Human *toUpdate, Human source){
 
 }
 
+/**
+ * @brief this func take a ptr and action in string, to send to different actions
+ * 
+ * @param ptr the pointer to perform the actions on
+ * @param action the action in string format
+*/
+void sendToAction(void *ptr, char * action){
+
+}
 // -> Missions funcs
 
 /**
@@ -331,6 +342,7 @@ void updateHuman(Human *toUpdate, Human source){
  * @param firstHuman the pointer to the first human in the program
 */
 void createFamilyHead(FamilyHead *firstHuman){
+
     // get name from user
     printf("Enter a name:\n");
     char *name = stringFromUser();
@@ -380,7 +392,19 @@ void createFamilyHead(FamilyHead *firstHuman){
     // create the human with name and age, everything else is null, and put in the new pointer.
     Human human = {name, 0, NULL,NULL,NULL,NULL,NULL};
     updateHuman(newHumanPointer, human);
+}
 
-    // just for testing
-    scanTree(firstHuman);
+/**
+ * @brief this func take from the user two humans names and marry them
+*/
+void marryTwoHumans(){
+    // ask the user who he want's to marry with who
+    printf("Enter the name of the first person:\n");
+    char * firstPersonName = stringFromUser();
+
+    printf("Enter the name of the second person:\n");
+    char * secondPersonName = stringFromUser();
+
+    // check if they exists.
+
 }
