@@ -47,6 +47,16 @@ void createFamilyHead(FamilyHead *firstHuman);
  */
 int main() {
 
+    // create the firstHuman for the run.
+    FamilyHead *firstHuman = (FamilyHead *)malloc(sizeof(FamilyHead));
+    if (firstHuman == NULL) {
+        exit(1);
+    }
+
+    // reset the value and next to null
+    firstHuman->properties = NULL;
+    firstHuman ->next = NULL; 
+
     // save the option the user picked, initalized to 1 to enter while loop.
     char choice = 1;
 
@@ -60,16 +70,6 @@ int main() {
         if (!isChoiceValid(choice)) {
             printf("Invalid option\n");
         }
-
-        // create the firstHuman for the run.
-        FamilyHead *firstHuman = (FamilyHead *)malloc(sizeof(FamilyHead));
-        if (firstHuman == NULL) {
-            exit(1);
-        }
-
-        // reset the value and next to null
-        firstHuman->properties = NULL;
-        firstHuman ->next = NULL;        
 
         sendToMission(choice, firstHuman);
     }
@@ -164,7 +164,7 @@ void scanTree(FamilyHead *firstHuman){
     // look at each familyHead - it's firstHuman right now
     // do something according to what we want
     if(firstHuman != NULL){
-        // for now just print the name of the human
+        // for now just print the age of the human
         printf("%s",firstHuman->properties->name);
 
         // send the next FH
@@ -306,6 +306,23 @@ FamilyHead *lastFamilyHead(FamilyHead *firstHuman) {
     return helper;
 }
 
+/**
+ * @brief this function updates a humans values into new values
+ * 
+ * @param toUpdate pointer to human to update
+ * @param source contains the info we want
+*/
+void updateHuman(Human *toUpdate, Human source){
+    toUpdate -> age = source.age;
+    toUpdate -> name = source.name;
+    toUpdate -> firstChild = source.firstChild;
+    toUpdate -> parent1 = source.parent1;
+    toUpdate -> parent2 = source.parent2;
+    toUpdate -> partner = source.partner;
+    toUpdate -> sibling = source.sibling;
+
+}
+
 // -> Missions funcs
 
 /**
@@ -322,6 +339,8 @@ void createFamilyHead(FamilyHead *firstHuman){
     printf("Enter age:\n");
     unsigned int age;
     scanf("%u",&age);
+
+    cleanBuffer();
     
     // check if name doesn't exists with the scan upward (W.I.P)
     int exists = 0; // just for testing
@@ -336,16 +355,10 @@ void createFamilyHead(FamilyHead *firstHuman){
         exit(1);
     }
 
-    // create the human with name and age, everything else is null.
-    Human human = {name, 0, NULL,NULL,NULL,NULL,NULL};
-
-    // take the human value in the pointer
-    newHumanPointer = &human;
-
     // first familyHead? save the value to firstHuman
     if(firstHuman->properties == NULL){
         firstHuman->properties = newHumanPointer;
-        
+
         // not the first? save in the last node of the familyHead
     }else{
         FamilyHead *lastPointer = lastFamilyHead(firstHuman);
@@ -353,4 +366,11 @@ void createFamilyHead(FamilyHead *firstHuman){
         // add the human to the last node of the familyHead.
         lastPointer -> properties = newHumanPointer;
     }
+
+    // create the human with name and age, everything else is null, and put in the new pointer.
+    Human human = {name, 0, NULL,NULL,NULL,NULL,NULL};
+    updateHuman(newHumanPointer, human);
+
+    // just for testing
+    scanTree(firstHuman);
 }
