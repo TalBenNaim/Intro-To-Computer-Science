@@ -35,20 +35,26 @@ Human **scanTree(FamilyHead *firstHuman, unsigned int *arrayLen);
 Human **scanTreeFurther(Human *human, Human **dontScanAgain, unsigned int *index);
 char *stringFromUser();
 int isPtrInArray(Human **arrayOfPtr, void *ptr, unsigned int arrayLength);
-int isNameFree(Human **array, unsigned int arrayLen, char *nameToGive);
-Human *getHumanByName(Human **array, unsigned int arrayLen, char *nameToFind);
+int isNameFree(FamilyHead *firstHuman, char *nameToGive);
+Human *getHumanByName(FamilyHead *firstHuman, char *nameToFind);
 int canMarry(Human *firstPerson, Human *secondPerson, FamilyHead *firstHuman);
 int inSameFamily(Human *firstPerson, Human *secondPerson, FamilyHead *firstHuman);
 void printStrNoNewLine(char *str);
 FamilyHead *lastFamilyHead(FamilyHead *firstHuman);
 Human *getYoungestChild(Human *parent);
 void initializeHumanValues(Human *toUpdate, char *name, unsigned int age);
+void freeAllFamilyHeads(FamilyHead *firstHuman);
 void freeAll(FamilyHead *firstHuman);
 
 // -> Missions funcs
-void createFamilyHead(FamilyHead *firstHuman);
+void inputToCreateFamilyHead(FamilyHead *firstHuman);
+void createFamilyHead(FamilyHead *firstHuman, char *name, unsigned int age);
+
 void marryTwoHumans(FamilyHead *firstHuman);
-void createNewBorn(FamilyHead *firstHuman);
+
+void inputToCreateNewBorn(FamilyHead *firstHuman);
+void createNewBorn(FamilyHead *firstHuman, Human *firstParent, Human *secondParent, char *babyName);
+
 void yearsPass(FamilyHead *firstHuman);
 void countHumans(FamilyHead *firstHuman);
 
@@ -61,80 +67,6 @@ void countHumans(FamilyHead *firstHuman);
  */
 int main() {
 
-    // creating Father
-    FamilyHead *father = (FamilyHead *)malloc(sizeof(FamilyHead));
-    if (father == NULL) {
-        exit(1);
-    }
-
-    Human *fatherHumanPointer = (Human *)malloc(sizeof(Human));
-    if (fatherHumanPointer == NULL) {
-        exit(1);
-    }
-
-    father->properties = fatherHumanPointer;
-    initializeHumanValues(fatherHumanPointer, "Father", 50);
-
-    // creating Mother
-    FamilyHead *mother = (FamilyHead *)malloc(sizeof(FamilyHead));
-    if (mother == NULL) {
-        exit(1);
-    }
-
-    Human *motherHumanPointer = (Human *)malloc(sizeof(Human));
-    if (motherHumanPointer == NULL) {
-        exit(1);
-    }
-
-    mother->properties = motherHumanPointer;
-    mother->next = NULL;
-
-    initializeHumanValues(motherHumanPointer, "Mother", 50);
-
-    father->next = mother;
-
-    // make mother and father married
-
-    mother->properties->partner = father->properties;
-    father->properties->partner = mother->properties;
-
-    // create son
-
-    Human *son = (Human *)malloc(sizeof(Human));
-    if (son == NULL) {
-        exit(1);
-    }
-
-    initializeHumanValues(son, "Son", 20);
-
-    // make son actually their son
-    mother->properties->firstChild = son;
-    father->properties->firstChild = son;
-
-    son->parent1 = mother->properties;
-    son->parent2 = father->properties;
-
-    // see if scan works correctly
-    unsigned int arrayLen = 0;
-    Human **array = scanTree(father, &arrayLen);
-
-    for (unsigned int i = 0; i < arrayLen; i++) {
-        printf("%s", array[i]->name);
-    }
-
-    // free all humans through the array.
-    for (unsigned int i = 0; i < arrayLen; i++) {
-        free(array[i]);
-    }
-
-    // free the array after we used it.
-    free(array);
-
-    // free all the familyHeads
-    freeAll(father);
-
-    // COMMENTED OUT FOR TESTING
-    /*
     // create the firstHuman for the run.
     FamilyHead *firstHuman = (FamilyHead *)malloc(sizeof(FamilyHead));
     if (firstHuman == NULL) {
@@ -159,9 +91,12 @@ int main() {
             printf("Invalid option\n");
         }
 
+        // send the user to the right mission according to his choice.
         sendToMission(choice, firstHuman);
     }
-    */
+
+    // free all the structs in this program run before closing it.
+    freeAll(firstHuman);
 
     return 0;
 }
@@ -216,19 +151,19 @@ int isChoiceValid(char choice) {
  * @brief this function gets a choice and moves the user to the right missions
  *
  * @param choice the choice the user made
- * @param firstHuman he is neede in all the missions
+ * @param firstHuman he is needed in all the missions
  */
 void sendToMission(char choice, FamilyHead *firstHuman) {
     // depending on the user's choice navigate the user to the right program.
     switch (choice) {
         case '1':
-            createFamilyHead(firstHuman);
+            inputToCreateFamilyHead(firstHuman);
             break;
         case '2':
             marryTwoHumans(firstHuman);
             break;
         case '3':
-            createNewBorn(firstHuman);
+            inputToCreateNewBorn(firstHuman);
             break;
         case '4':
             break;
@@ -286,8 +221,9 @@ Human **scanTree(FamilyHead *firstHuman, unsigned int *arrayLen) {
 }
 
 /**
- * @brief this function scan the tree further, all the memebers after each family head
- *
+ * @brief this function scan the tree further, all the members after each family head.
+ * this function recursively calls itself for the firstChild and sibling of each human.
+ * if memory allocation fail we exit the program.
  * @param human the human to scan
  * @param dontScanAgain an array to save the humans we don't want to scan again. (if we won't through them).
  */
@@ -369,7 +305,7 @@ char *stringFromUser() {
 int isPtrInArray(Human **arrayOfPtr, void *ptr, unsigned int arrayLength) {
     // loop through each element of the array
     for (unsigned int i = 0; i < arrayLength; i++) {
-        // if an element is equal to the ptr we are looing for, return 1;
+        // if an element is equal to the ptr we are looking for, return 1;
         if (arrayOfPtr[i] == ptr) {
             return 1;
         }
@@ -426,14 +362,23 @@ void initializeHumanValues(Human *toUpdate, char *name, unsigned int age) {
  *
  * @return 1 if the name is free, 0 if not.
  */
-int isNameFree(Human **array, unsigned int arrayLen, char *nameToGive) {
+int isNameFree(FamilyHead *firstHuman, char *nameToGive) {
+    // get the array with all the humans
+    unsigned int arrayLen = 0;
+    Human **array = scanTree(firstHuman, &arrayLen);
+
     // loop through every element
     for (unsigned int i = 0; i < arrayLen; i++) {
         // if the name of an element is the same as the name we want to give it's not free, return 0.
         if (strcmp(array[i]->name, nameToGive) == 0) {
+            // free the array after use
+            free(array);
             return 0;
         }
     }
+    // free the array after use
+    free(array);
+
     // couldn't find it so, it's free
     return 1;
 }
@@ -447,14 +392,25 @@ int isNameFree(Human **array, unsigned int arrayLen, char *nameToGive) {
  *
  * @return the human with the same name, or null if it does not exists.
  */
-Human *getHumanByName(Human **array, unsigned int arrayLen, char *nameToFind) {
+Human *getHumanByName(FamilyHead *firstHuman, char *nameToFind) {
+    // get the array with all the humans
+    unsigned int arrayLen = 0;
+    Human **array = scanTree(firstHuman, &arrayLen);
+
     // loop through every element
     for (unsigned int i = 0; i < arrayLen; i++) {
         // if the name of an element is the same as the name we want to give it's not free, return 0.
         if (strcmp(array[i]->name, nameToFind) == 0) {
-            return array[i];
+            Human *saveToReturn = array[i];
+            // free the array after use
+            free(array);
+            return saveToReturn;
         }
     }
+
+    // free the array after use
+    free(array);
+
     // couldn't find it so, it's free
     return NULL;
 }
@@ -570,25 +526,54 @@ Human *getYoungestChild(Human *parent) {
 
 /**
  * @brief this function free all the nodes in the family head list.
+ * we are free the each one recursively
+ *
+ * @param firstHuman the first human in the program. he holds all the family heads.
+ */
+void freeAllFamilyHeads(FamilyHead *firstHuman) {
+    // if firstHuman exists
+    if (firstHuman) {
+
+        // free the next one recursively
+        freeAllFamilyHeads(firstHuman->next);
+
+        // free the current node
+        free(firstHuman);
+
+        return;
+    }
+}
+
+/**
+ * @brief free everything in the program, all the family heads and the humans.
  *
  * @param firstHuman the first human in the program. he holds all the family heads.
  */
 void freeAll(FamilyHead *firstHuman) {
-    if (firstHuman) {
-        freeAll(firstHuman->next);
-        free(firstHuman);
-        return;
+    // get an array of all the humans.
+    unsigned int arrayLen = 0;
+    Human **array = scanTree(firstHuman, &arrayLen);
+
+    // free all humans through the array.
+    for (unsigned int i = 0; i < arrayLen; i++) {
+        free(array[i]);
     }
+
+    // free the array after we used it.
+    free(array);
+
+    // free all the familyHeads before ending the program.
+    freeAllFamilyHeads(firstHuman);
 }
 
 // -> Missions funcs
 
 /**
- * @brief This function creates a family head with the name and age
+ * @brief This function takes from the user a name and age, pass them to create the familyHead.
  *
  * @param firstHuman the pointer to the first human in the program
  */
-void createFamilyHead(FamilyHead *firstHuman) {
+void inputToCreateFamilyHead(FamilyHead *firstHuman) {
     // get name from user
     printf("Enter a name:\n");
     char *name = stringFromUser();
@@ -600,16 +585,35 @@ void createFamilyHead(FamilyHead *firstHuman) {
 
     cleanBuffer();
 
-    // check if name doesn't exists with the scan upward
+    // get the array of humans in scanTree
     unsigned int arrayLen = 0;
     Human **array = scanTree(firstHuman, &arrayLen);
 
-    int exists = isNameFree(array, arrayLen, name);
+    // check if the name we want exists in the array
+    int exists = isNameFree(firstHuman, name);
     if (exists == 0) {
         printf("The name is already taken\n");
+        // free the array after we used it.
+        free(array);
         return;
     }
 
+    // free the array after we used it.
+    free(array);
+
+    // create the familyHead with the name and age we want.
+    createFamilyHead(firstHuman, name, age);
+}
+
+/**
+ * @brief This function creates a family head with the name and age
+ * if memory allocation fail we exit the program.
+ *
+ * @param firstHuman the pointer to the first human in the program
+ * @param name the name of the human
+ * @param age the age of the human
+ */
+void createFamilyHead(FamilyHead *firstHuman, char *name, unsigned int age) {
     // allocate memory to human pointer
     Human *newHumanPointer = (Human *)malloc(sizeof(Human));
     if (newHumanPointer == NULL) {
@@ -632,9 +636,8 @@ void createFamilyHead(FamilyHead *firstHuman) {
         newHead->properties = newHumanPointer;
         newHead->next = NULL;
 
+        // get the last pointer and link the nextHead to it
         FamilyHead *lastPointer = lastFamilyHead(firstHuman);
-
-        // add the human to the last node of the familyHead.
         lastPointer->next = newHead;
     }
 
@@ -655,15 +658,13 @@ void marryTwoHumans(FamilyHead *firstHuman) {
     printf("Enter the name of the second person:\n");
     char *secondPersonName = stringFromUser();
 
-    // get the array with all the humans
-    unsigned int arrayLen = 0;
-    Human **array = scanTree(firstHuman, &arrayLen);
-
     // get them both by name
-    Human *firstPerson = getHumanByName(array, arrayLen, firstPersonName);
-    Human *secondPerson = getHumanByName(array, arrayLen, secondPersonName);
+    Human *firstPerson = getHumanByName(firstHuman, firstPersonName);
+    Human *secondPerson = getHumanByName(firstHuman, secondPersonName);
 
+    // if both persons exists
     if (firstPerson != NULL && secondPerson != NULL) {
+        // if they can marry
         if (canMarry(firstPerson, secondPerson, firstHuman)) {
 
             printStrNoNewLine(firstPersonName);
@@ -682,14 +683,17 @@ void marryTwoHumans(FamilyHead *firstHuman) {
     } else {
         printf("One of the persons does not exist\n");
     }
+    // free the names
+    free(firstPersonName);
+    free(secondPersonName);
 }
 
 /**
- * @brief ask the users for two parents names and the baby name and birth him if it possible.
+ * @brief ask the users for two parents names and the baby name pass them to birth him if it possible.
  *
  * @param firstHuman the pointer to the first human in the program
  */
-void createNewBorn(FamilyHead *firstHuman) {
+void inputToCreateNewBorn(FamilyHead *firstHuman) {
     // ask the user who he want's to marry with who
     printf("Enter the name of the first parent:\n");
     char *firstParentName = stringFromUser();
@@ -697,63 +701,77 @@ void createNewBorn(FamilyHead *firstHuman) {
     printf("Enter the name of the second parent:\n");
     char *secondParentName = stringFromUser();
 
-    // get the array with all the humans
-    unsigned int arrayLen = 0;
-    Human **array = scanTree(firstHuman, &arrayLen);
-
-    // get them both by name
-    Human *firstParent = getHumanByName(array, arrayLen, firstParentName);
-    Human *secondParent = getHumanByName(array, arrayLen, secondParentName);
-
     // get the wanted baby name
     printf("Enter offspring's name:\n");
-    char *newBornName = stringFromUser();
+    char *babyName = stringFromUser();
 
+    // get them both by name
+    Human *firstParent = getHumanByName(firstHuman, firstParentName);
+    Human *secondParent = getHumanByName(firstHuman, secondParentName);
+
+    // free the string of the names after we got the humans objs and the array itself.
+    free(firstParentName);
+    free(secondParentName);
+
+    // if the parents exists
     if (firstParent != NULL && secondParent != NULL) {
+        // check if they are married.
         if (firstParent->partner == secondParent) {
-            // check if baby name is free to use.
-            unsigned int arrayLen = 0;
-            Human **array = scanTree(firstHuman, &arrayLen);
 
-            int exists = isNameFree(array, arrayLen, newBornName);
+            // check if name is free for the baby
+            int exists = isNameFree(firstHuman, babyName);
             if (exists == 0) {
                 printf("The name is already taken\n");
 
                 // its free so create the baby
             } else {
-                // allocate memory to human pointer
-                Human *newHumanPointer = (Human *)malloc(sizeof(Human));
-                if (newHumanPointer == NULL) {
-                    exit(1);
-                }
-
-                // if it's their first child point to it.
-                if (firstParent->firstChild == NULL) {
-                    firstParent->firstChild = newHumanPointer;
-                    secondParent->firstChild = newHumanPointer;
-
-                    // grab the latest
-                } else {
-
-                    Human *lastPointer = getYoungestChild(firstParent);
-
-                    // add the human to the last node of the familyHead.
-                    lastPointer->sibling = newHumanPointer;
-                }
-
-                // create the human with name and age, everything else is null, and put in the new pointer.
-                initializeHumanValues(newHumanPointer, newBornName, 0);
-
-                printStrNoNewLine(newBornName);
-                printf(" was born\n");
+                createNewBorn(firstHuman, firstParent, secondParent, babyName);
             }
         } else {
             printf("The parents are not married\n");
         }
-
     } else {
         printf("One of the persons does not exist\n");
+        free(babyName);
     }
+}
+
+/**
+ * @brief this function createNewBorn with parents names and baby name the user chose.
+ * if memory allocation fail we exit the program.
+ *
+ * @param firstHuman the pointer to the first human in the program
+ * @param firstParent the firstParent to create a new born
+ * @param secondParent the secondParent to create a new born
+ * @param babyName the baby name the users chose for the new born
+ */
+void createNewBorn(FamilyHead *firstHuman, Human *firstParent, Human *secondParent, char *babyName) {
+    // allocate memory to human pointer
+    Human *newHumanPointer = (Human *)malloc(sizeof(Human));
+    if (newHumanPointer == NULL) {
+        exit(1);
+    }
+
+    // if it's their first child point to it.
+    if (firstParent->firstChild == NULL) {
+        firstParent->firstChild = newHumanPointer;
+        secondParent->firstChild = newHumanPointer;
+
+        // grab the latest
+    } else {
+
+        Human *lastPointer = getYoungestChild(firstParent);
+
+        // add the human to the last node of the familyHead.
+        lastPointer->sibling = newHumanPointer;
+    }
+
+    // create the human with name and age(default is 0), everything else is null, and put in the new pointer.
+    initializeHumanValues(newHumanPointer, babyName, 0);
+
+    // the baby was born!
+    printStrNoNewLine(babyName);
+    printf(" was born\n");
 }
 
 /**
