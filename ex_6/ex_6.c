@@ -1,4 +1,4 @@
-// (89110, Spring 2023, Assignment #5, Tal Ben Naim, 212749071, bennait3)
+// (89110, Spring 2023, Assignment #6, Tal Ben Naim, 212749071, bennait3)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,10 +39,14 @@ int isNameFree(Human **array, unsigned int arrayLen, char *nameToGive);
 Human *getHumanByName(Human **array, unsigned int arrayLen, char *nameToFind);
 int canMarry(Human *firstPerson, Human *secondPerson, FamilyHead *firstHuman);
 int inSameFamily(Human *firstPerson, Human *secondPerson, FamilyHead *firstHuman);
+void printStrNoNewLine(char *str);
+FamilyHead *lastFamilyHead(FamilyHead *firstHuman);
+Human *getYoungestChild(Human *parent);
 
 // -> Missions funcs
 void createFamilyHead(FamilyHead *firstHuman);
 void marryTwoHumans(FamilyHead *firstHuman);
+void createNewBorn(FamilyHead *firstHuman);
 void yearsPass(FamilyHead *firstHuman);
 void countHumans(FamilyHead *firstHuman);
 
@@ -147,6 +151,7 @@ void sendToMission(char choice, FamilyHead *firstHuman) {
             marryTwoHumans(firstHuman);
             break;
         case '3':
+            createNewBorn(firstHuman);
             break;
         case '4':
             break;
@@ -455,6 +460,38 @@ int inSameFamily(Human *firstPerson, Human *secondPerson, FamilyHead *firstHuman
     return 0;
 }
 
+/**
+ * @brief print the given string without the new line.
+ * @param str the pointer to the string to print
+ */
+void printStrNoNewLine(char *str) {
+    int index = 0;
+    while (str[index] != '\0' && str[index] != NEW_LINE_ASCII) {
+        printf("%c", str[index]);
+        index++;
+    }
+}
+
+/**
+ * @brief this function gets the youngest child the parent have.
+ *
+ * @param parent the parent to get the youngest child of
+ *
+ * @return the pointer of the youngest child
+ */
+Human *getYoungestChild(Human *parent) {
+    // an helper pointer to store the head and not change it.
+    Human *helper = parent;
+
+    // go next node until we see a null.
+    while (helper->firstChild->sibling != NULL) {
+        // move the helper to be the next node
+        helper = helper->firstChild->sibling;
+    }
+    // return the helper as the last node
+    return helper;
+}
+
 // -> Missions funcs
 
 /**
@@ -474,7 +511,7 @@ void createFamilyHead(FamilyHead *firstHuman) {
 
     cleanBuffer();
 
-    // check if name doesn't exists with the scan upward (W.I.P)
+    // check if name doesn't exists with the scan upward
     unsigned int arrayLen = 0;
     Human **array = scanTree(firstHuman, &arrayLen);
 
@@ -518,7 +555,9 @@ void createFamilyHead(FamilyHead *firstHuman) {
 }
 
 /**
- * @brief this func take from the user two humans names and marry them
+ * @brief this func take from the user two humans names and marry them if they can.
+ *
+ * @param firstHuman the pointer to the first human in the program
  */
 void marryTwoHumans(FamilyHead *firstHuman) {
     // ask the user who he want's to marry with who
@@ -538,13 +577,88 @@ void marryTwoHumans(FamilyHead *firstHuman) {
 
     if (firstPerson != NULL && secondPerson != NULL) {
         if (canMarry(firstPerson, secondPerson, firstHuman)) {
-            printf("%s and %s are now married.", firstPersonName, secondPersonName);
+
+            printStrNoNewLine(firstPersonName);
+            printf(" and ");
+            printStrNoNewLine(secondPersonName);
+            printf(" are now married\n");
+
             // assign the partner for each other
             firstPerson->partner = secondPerson;
             secondPerson->partner = firstPerson;
 
         } else {
             printf("Invalid marriage\n");
+        }
+
+    } else {
+        printf("One of the persons does not exist\n");
+    }
+}
+
+/**
+ * @brief ask the users for two parents names and the baby name and birth him if it possible.
+ *
+ * @param firstHuman the pointer to the first human in the program
+ */
+void createNewBorn(FamilyHead *firstHuman) {
+    // ask the user who he want's to marry with who
+    printf("Enter the name of the first parent:\n");
+    char *firstParentName = stringFromUser();
+
+    printf("Enter the name of the second parent:\n");
+    char *secondParentName = stringFromUser();
+
+    // get the array with all the humans
+    unsigned int arrayLen = 0;
+    Human **array = scanTree(firstHuman, &arrayLen);
+
+    // get them both by name
+    Human *firstParent = getHumanByName(array, arrayLen, firstParentName);
+    Human *secondParent = getHumanByName(array, arrayLen, secondParentName);
+
+    // get the wanted baby name
+    printf("Enter offspring's name:\n");
+    char *newBornName = stringFromUser();
+
+    if (firstParent != NULL && secondParent != NULL) {
+        if (firstParent->partner == secondParent) {
+            // check if baby name is free to use.
+            unsigned int arrayLen = 0;
+            Human **array = scanTree(firstHuman, &arrayLen);
+
+            int exists = isNameFree(array, arrayLen, newBornName);
+            if (exists == 0) {
+                printf("The name is already taken\n");
+
+                // its free so create the baby
+            } else {
+                // allocate memory to human pointer
+                Human *newHumanPointer = (Human *)malloc(sizeof(Human));
+                if (newHumanPointer == NULL) {
+                    exit(1);
+                }
+
+                // if it's their first child point to it.
+                if (firstParent->firstChild == NULL) {
+                    firstParent->firstChild = newHumanPointer;
+                    secondParent->firstChild = newHumanPointer;
+
+                    // grab the latest
+                } else {
+
+                    Human *lastPointer = getYoungestChild(firstParent);
+
+                    // add the human to the last node of the familyHead.
+                    lastPointer->sibling = newHumanPointer;
+                }
+
+                // create the human with name and age, everything else is null, and put in the new pointer.
+                Human human = {newBornName, 0, NULL, NULL, NULL, NULL, NULL};
+                updateHuman(newHumanPointer, human);
+            }
+        } else {
+            printf("The parents are not married\n");
         }
 
     } else {
