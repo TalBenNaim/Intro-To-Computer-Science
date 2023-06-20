@@ -32,7 +32,7 @@ void cleanBuffer();
 int isChoiceValid(char option);
 void sendToMission(char choice, FamilyHead *firstHuman);
 Human **scanTree(FamilyHead *firstHuman, unsigned int *arrayLen);
-void scanTreeFurther(Human *human, Human **dontScanAgain, unsigned int index);
+Human **scanTreeFurther(Human *human, Human **dontScanAgain, unsigned int *index);
 char *stringFromUser();
 int isPtrInArray(Human **arrayOfPtr, void *ptr, unsigned int arrayLength);
 int isNameFree(Human **array, unsigned int arrayLen, char *nameToGive);
@@ -42,6 +42,8 @@ int inSameFamily(Human *firstPerson, Human *secondPerson, FamilyHead *firstHuman
 void printStrNoNewLine(char *str);
 FamilyHead *lastFamilyHead(FamilyHead *firstHuman);
 Human *getYoungestChild(Human *parent);
+void initializeHumanValues(Human *toUpdate, char *name, unsigned int age);
+void freeAll(FamilyHead *firstHuman);
 
 // -> Missions funcs
 void createFamilyHead(FamilyHead *firstHuman);
@@ -59,6 +61,80 @@ void countHumans(FamilyHead *firstHuman);
  */
 int main() {
 
+    // creating Father
+    FamilyHead *father = (FamilyHead *)malloc(sizeof(FamilyHead));
+    if (father == NULL) {
+        exit(1);
+    }
+
+    Human *fatherHumanPointer = (Human *)malloc(sizeof(Human));
+    if (fatherHumanPointer == NULL) {
+        exit(1);
+    }
+
+    father->properties = fatherHumanPointer;
+    initializeHumanValues(fatherHumanPointer, "Father", 50);
+
+    // creating Mother
+    FamilyHead *mother = (FamilyHead *)malloc(sizeof(FamilyHead));
+    if (mother == NULL) {
+        exit(1);
+    }
+
+    Human *motherHumanPointer = (Human *)malloc(sizeof(Human));
+    if (motherHumanPointer == NULL) {
+        exit(1);
+    }
+
+    mother->properties = motherHumanPointer;
+    mother->next = NULL;
+
+    initializeHumanValues(motherHumanPointer, "Mother", 50);
+
+    father->next = mother;
+
+    // make mother and father married
+
+    mother->properties->partner = father->properties;
+    father->properties->partner = mother->properties;
+
+    // create son
+
+    Human *son = (Human *)malloc(sizeof(Human));
+    if (son == NULL) {
+        exit(1);
+    }
+
+    initializeHumanValues(son, "Son", 20);
+
+    // make son actually their son
+    mother->properties->firstChild = son;
+    father->properties->firstChild = son;
+
+    son->parent1 = mother->properties;
+    son->parent2 = father->properties;
+
+    // see if scan works correctly
+    unsigned int arrayLen = 0;
+    Human **array = scanTree(father, &arrayLen);
+
+    for (unsigned int i = 0; i < arrayLen; i++) {
+        printf("%s", array[i]->name);
+    }
+
+    // free all humans through the array.
+    for (unsigned int i = 0; i < arrayLen; i++) {
+        free(array[i]);
+    }
+
+    // free the array after we used it.
+    free(array);
+
+    // free all the familyHeads
+    freeAll(father);
+
+    // COMMENTED OUT FOR TESTING
+    /*
     // create the firstHuman for the run.
     FamilyHead *firstHuman = (FamilyHead *)malloc(sizeof(FamilyHead));
     if (firstHuman == NULL) {
@@ -85,6 +161,7 @@ int main() {
 
         sendToMission(choice, firstHuman);
     }
+    */
 
     return 0;
 }
@@ -163,7 +240,6 @@ void sendToMission(char choice, FamilyHead *firstHuman) {
             break;
         case '7':
             break;
-
         default:
             break;
     }
@@ -200,7 +276,7 @@ Human **scanTree(FamilyHead *firstHuman, unsigned int *arrayLen) {
         // send his firstChild to the scanTreeFurther
 
         if (firstHuman->properties->firstChild != NULL) {
-            scanTreeFurther(firstHuman->properties->firstChild, array, index);
+            array = scanTreeFurther(firstHuman->properties->firstChild, array, &index);
         }
 
         firstHuman = firstHuman->next;
@@ -215,35 +291,34 @@ Human **scanTree(FamilyHead *firstHuman, unsigned int *arrayLen) {
  * @param human the human to scan
  * @param dontScanAgain an array to save the humans we don't want to scan again. (if we won't through them).
  */
-void scanTreeFurther(Human *human, Human **dontScanAgain, unsigned int index) {
+Human **scanTreeFurther(Human *human, Human **dontScanAgain, unsigned int *index) {
     if (human != NULL) {
         // if he's in the dontScanAgain we return before processing
-        if (isPtrInArray(dontScanAgain, human, index) == 1) {
-            return;
+        if (isPtrInArray(dontScanAgain, human, *index) == 1) {
+            return dontScanAgain;
         }
-
-        // add him to the dontScanAgain array
-        dontScanAgain[index] = human;
-
         /*
         expand the memory according to the size thous far
         we allocated index+1 to offset the diff of array numbering to actual numbers of memory blocks
         */
-        dontScanAgain = (Human **)realloc(dontScanAgain, (index + 1) * sizeof(Human *));
+        dontScanAgain = (Human **)realloc(dontScanAgain, ((*index) + 1) * sizeof(Human *));
         if (dontScanAgain == NULL) {
             exit(1);
         }
 
-        index++;
+        // add him to the dontScanAgain array
+        dontScanAgain[*index] = human;
+
+        *index = (*index) + 1;
 
         // send this human firstChild to scanTreeFurther
-        scanTreeFurther(human->firstChild, dontScanAgain, index);
+        dontScanAgain = scanTreeFurther(human->firstChild, dontScanAgain, index);
 
         // send this human siblings to scanTreeFurther
-        scanTreeFurther(human->sibling, dontScanAgain, index);
-
-        return;
+        dontScanAgain = scanTreeFurther(human->sibling, dontScanAgain, index);
     }
+
+    return dontScanAgain;
 }
 
 /**
@@ -325,20 +400,21 @@ FamilyHead *lastFamilyHead(FamilyHead *firstHuman) {
 }
 
 /**
- * @brief this function updates a humans values into new values
+ * @brief this function initialize values into a human pointer.
  *
  * @param toUpdate pointer to human to update
- * @param source contains the info we want
+ * @param name contains the name we want
+ * @param age contains the age we want
  */
-void updateHuman(Human *toUpdate, Human source) {
+void initializeHumanValues(Human *toUpdate, char *name, unsigned int age) {
     // update each property
-    toUpdate->age = source.age;
-    toUpdate->name = source.name;
-    toUpdate->firstChild = source.firstChild;
-    toUpdate->parent1 = source.parent1;
-    toUpdate->parent2 = source.parent2;
-    toUpdate->partner = source.partner;
-    toUpdate->sibling = source.sibling;
+    toUpdate->age = age;
+    toUpdate->name = name;
+    toUpdate->firstChild = NULL;
+    toUpdate->parent1 = NULL;
+    toUpdate->parent2 = NULL;
+    toUpdate->partner = NULL;
+    toUpdate->sibling = NULL;
 }
 
 /**
@@ -443,7 +519,7 @@ int inSameFamily(Human *firstPerson, Human *secondPerson, FamilyHead *firstHuman
         // send his firstChild to the scanTreeFurther
 
         if (firstHuman->properties->firstChild != NULL) {
-            scanTreeFurther(firstHuman->properties->firstChild, array, index);
+            scanTreeFurther(firstHuman->properties->firstChild, array, &index);
         }
 
         if (isPtrInArray(array, firstPerson, index) == 1 && isPtrInArray(array, secondPerson, index) == 1) {
@@ -490,6 +566,19 @@ Human *getYoungestChild(Human *parent) {
     }
     // return the helper as the last node
     return helper;
+}
+
+/**
+ * @brief this function free all the nodes in the family head list.
+ *
+ * @param firstHuman the first human in the program. he holds all the family heads.
+ */
+void freeAll(FamilyHead *firstHuman) {
+    if (firstHuman) {
+        freeAll(firstHuman->next);
+        free(firstHuman);
+        return;
+    }
 }
 
 // -> Missions funcs
@@ -550,8 +639,7 @@ void createFamilyHead(FamilyHead *firstHuman) {
     }
 
     // create the human with name and age, everything else is null, and put in the new pointer.
-    Human human = {name, age, NULL, NULL, NULL, NULL, NULL};
-    updateHuman(newHumanPointer, human);
+    initializeHumanValues(newHumanPointer, name, age);
 }
 
 /**
@@ -654,8 +742,10 @@ void createNewBorn(FamilyHead *firstHuman) {
                 }
 
                 // create the human with name and age, everything else is null, and put in the new pointer.
-                Human human = {newBornName, 0, NULL, NULL, NULL, NULL, NULL};
-                updateHuman(newHumanPointer, human);
+                initializeHumanValues(newHumanPointer, newBornName, 0);
+
+                printStrNoNewLine(newBornName);
+                printf(" was born\n");
             }
         } else {
             printf("The parents are not married\n");
@@ -682,6 +772,9 @@ void yearsPass(FamilyHead *firstHuman) {
     for (unsigned int i = 0; i < arrayLen; i++) {
         array[i]->age = array[i]->age + years;
     }
+
+    // free the array after we used it.
+    free(array);
 }
 
 /**
@@ -699,4 +792,7 @@ void countHumans(FamilyHead *firstHuman) {
             printf("There are %d people\n", arrayLen);
         }
     }
+
+    // free the array after we used it.
+    free(array);
 }
