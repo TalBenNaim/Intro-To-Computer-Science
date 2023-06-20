@@ -45,6 +45,7 @@ Human *getYoungestChild(Human *parent);
 void initializeHumanValues(Human *toUpdate, char *name, unsigned int age);
 void freeAllFamilyHeads(FamilyHead *firstHuman);
 void freeAll(FamilyHead *firstHuman);
+void freeArrayOfPtr(void **array);
 
 // -> Missions funcs
 void inputToCreateFamilyHead(FamilyHead *firstHuman);
@@ -53,7 +54,7 @@ void createFamilyHead(FamilyHead *firstHuman, char *name, unsigned int age);
 void marryTwoHumans(FamilyHead *firstHuman);
 
 void inputToCreateNewBorn(FamilyHead *firstHuman);
-void createNewBorn(FamilyHead *firstHuman, Human *firstParent, Human *secondParent, char *babyName);
+void createNewBorn(Human *firstParent, Human *secondParent, char *babyName);
 
 void yearsPass(FamilyHead *firstHuman);
 void countHumans(FamilyHead *firstHuman);
@@ -566,6 +567,14 @@ void freeAll(FamilyHead *firstHuman) {
     freeAllFamilyHeads(firstHuman);
 }
 
+/**
+ * @brief this function frees an array of pointers
+ *
+ * @param array the array to free
+ */
+void freeArrayOfPtr(void **array) {
+}
+
 // -> Missions funcs
 
 /**
@@ -725,7 +734,7 @@ void inputToCreateNewBorn(FamilyHead *firstHuman) {
 
                 // its free so create the baby
             } else {
-                createNewBorn(firstHuman, firstParent, secondParent, babyName);
+                createNewBorn(firstParent, secondParent, babyName);
             }
         } else {
             printf("The parents are not married\n");
@@ -740,12 +749,11 @@ void inputToCreateNewBorn(FamilyHead *firstHuman) {
  * @brief this function createNewBorn with parents names and baby name the user chose.
  * if memory allocation fail we exit the program.
  *
- * @param firstHuman the pointer to the first human in the program
  * @param firstParent the firstParent to create a new born
  * @param secondParent the secondParent to create a new born
  * @param babyName the baby name the users chose for the new born
  */
-void createNewBorn(FamilyHead *firstHuman, Human *firstParent, Human *secondParent, char *babyName) {
+void createNewBorn(Human *firstParent, Human *secondParent, char *babyName) {
     // allocate memory to human pointer
     Human *newHumanPointer = (Human *)malloc(sizeof(Human));
     if (newHumanPointer == NULL) {
@@ -811,6 +819,7 @@ void countHumans(FamilyHead *firstHuman) {
         }
     }
 
+    // free array of pointers
     // free the array after we used it.
     free(array);
 }
