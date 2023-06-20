@@ -45,7 +45,6 @@ Human *getYoungestChild(Human *parent);
 void initializeHumanValues(Human *toUpdate, char *name, unsigned int age);
 void freeAllFamilyHeads(FamilyHead *firstHuman);
 void freeAll(FamilyHead *firstHuman);
-void freeArrayOfPtr(void **array);
 
 // -> Missions funcs
 void inputToCreateFamilyHead(FamilyHead *firstHuman);
@@ -567,14 +566,6 @@ void freeAll(FamilyHead *firstHuman) {
     freeAllFamilyHeads(firstHuman);
 }
 
-/**
- * @brief this function frees an array of pointers
- *
- * @param array the array to free
- */
-void freeArrayOfPtr(void **array) {
-}
-
 // -> Missions funcs
 
 /**
@@ -819,7 +810,6 @@ void countHumans(FamilyHead *firstHuman) {
         }
     }
 
-    // free array of pointers
     // free the array after we used it.
     free(array);
 }
