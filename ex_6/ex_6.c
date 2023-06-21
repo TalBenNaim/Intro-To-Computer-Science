@@ -93,7 +93,7 @@ int main() {
     firstHuman->next = NULL;
 
     // save the option the user picked, initalized to 1 to enter while loop.
-    char choice = 1;
+    char choice = '1';
 
     while (choice != '0') {
         // present the menu to the user and take his choice
