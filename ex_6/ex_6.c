@@ -336,6 +336,9 @@ char *stringFromUser(FamilyHead *firstHuman) {
         // check the index we just inserted to and see if it's new line.
     } while (usersInput != NEW_LINE_ASCII);
 
+    // Null-terminate the string
+    str[index] = '\0';
+
     // return the pointer to the string we built
     return str;
 }
