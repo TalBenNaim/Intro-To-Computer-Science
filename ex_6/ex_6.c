@@ -55,6 +55,10 @@ void marryTwoHumans(FamilyHead *firstHuman);
 void inputToCreateNewBorn(FamilyHead *firstHuman);
 void createNewBorn(Human *firstParent, Human *secondParent, char *babyName);
 
+void printFamily(FamilyHead *firstHuman);
+void printFamilyFurther(Human *human);
+void printHumanFormat(Human *humanToPrint);
+
 void yearsPass(FamilyHead *firstHuman);
 void countHumans(FamilyHead *firstHuman);
 
@@ -224,6 +228,7 @@ Human **scanTree(FamilyHead *firstHuman, unsigned int *arrayLen) {
  * @brief this function scan the tree further, all the members after each family head.
  * this function recursively calls itself for the firstChild and sibling of each human.
  * if memory allocation fail we exit the program.
+ *
  * @param human the human to scan
  * @param dontScanAgain an array to save the humans we don't want to scan again. (if we won't through them).
  */
@@ -401,14 +406,11 @@ Human *getHumanByName(FamilyHead *firstHuman, char *nameToFind) {
     for (unsigned int i = 0; i < arrayLen; i++) {
         // if the name of an element is the same as the name we want to give it's not free, return 0.
         if (strcmp(array[i]->name, nameToFind) == 0) {
-            Human *saveToReturn = array[i];
-            // free the array after use
-            free(array);
-            return saveToReturn;
+
+            return array[i];
         }
     }
 
-    // free the array after use
     free(array);
 
     // couldn't find it so, it's free
@@ -564,6 +566,20 @@ void freeAll(FamilyHead *firstHuman) {
 
     // free all the familyHeads before ending the program.
     freeAllFamilyHeads(firstHuman);
+}
+
+/**
+ * @brief this function prints the human name and age according to the format
+ * - name (age)
+ *
+ * @param humanToPrint the human to print
+ */
+void printHumanFormat(Human *humanToPrint) {
+    // print the name
+    printStrNoNewLine(humanToPrint->name);
+
+    // print the age
+    printf(" (%d)", humanToPrint->age);
 }
 
 // -> Missions funcs
@@ -771,6 +787,85 @@ void createNewBorn(Human *firstParent, Human *secondParent, char *babyName) {
     // the baby was born!
     printStrNoNewLine(babyName);
     printf(" was born\n");
+}
+
+/**
+ * @brief this functions ask the user for a name of a person and prints his family
+ *
+ * @param firstHuman the firstHuman in the program.
+ */
+void printFamily(FamilyHead *firstHuman) {
+    // take the name of the person from the user
+    printf("Enter the name of the person:\n");
+    char *nameOfHuman = stringFromUser();
+
+    // get the human object from the name
+    Human *wantedHuman = getHumanByName(firstHuman, nameOfHuman);
+
+    // free the name after use
+    free(nameOfHuman);
+
+    if (wantedHuman != NULL) {
+        // print the human itself according to the format.
+        printHumanFormat(wantedHuman);
+
+        // if the human is married print the partner
+        if ((wantedHuman->partner) != NULL) {
+            // separate them with -
+            printf(" - ");
+            printHumanFormat(wantedHuman->partner);
+
+            // if there is a firstChild send him to even printFurther
+            if ((wantedHuman->firstChild) != NULL) {
+                // print new line before printing child
+                printf("\n");
+
+                printFamilyFurther(wantedHuman->firstChild);
+            }
+
+            // can't have childrens without a partner
+        } else {
+            return;
+        }
+    } else {
+        printf("The person does not exist\n");
+    }
+}
+
+/**
+ * @brief this function prints the family further
+ *
+ * @param human the human to start printing with
+ */
+void printFamilyFurther(Human *human) {
+    // if the human exists
+    if (human != NULL) {
+        // print tab for space
+        printf("\t");
+
+        // print the human itself according to the format.
+        printHumanFormat(human);
+
+        // if the human is married print the partner
+        if ((human->partner) != NULL) {
+            // separate them with -
+            printf(" - ");
+            printHumanFormat(human->partner);
+
+            // if there is a firstChild send him to even printFurther
+            if ((human->firstChild) != NULL) {
+                // print new line before printing child
+                printf("\n");
+
+                printFamilyFurther(human->firstChild);
+            }
+        }
+
+        if ((human->sibling != NULL)) {
+            printf("\n");
+            printFamilyFurther(human->sibling);
+        }
+    }
 }
 
 /**
