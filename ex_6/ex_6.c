@@ -922,9 +922,11 @@ void inputToCreateNewBorn(FamilyHead *firstHuman) {
                 createNewBorn(firstParent, secondParent, babyName, firstHuman);
             }
         } else {
+            free(babyName);
             printf("The parents are not married\n");
         }
     } else {
+        free(babyName);
         printf("One of the persons does not exist\n");
     }
 }
