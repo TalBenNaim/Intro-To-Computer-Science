@@ -32,8 +32,8 @@ void cleanBuffer();
 int isChoiceValid(char option);
 void sendToMission(char choice, FamilyHead *firstHuman);
 Human **scanTree(FamilyHead *firstHuman, unsigned int *arrayLen);
-Human **scanTreeFurther(Human *human, Human **dontScanAgain, unsigned int *index);
-char *stringFromUser();
+Human **scanTreeFurther(Human *human, Human **dontScanAgain, unsigned int *index, FamilyHead *firstHuman);
+char *stringFromUser(FamilyHead *firstHuman);
 int isPtrInArray(Human **arrayOfPtr, void *ptr, unsigned int arrayLength);
 int isNameFree(FamilyHead *firstHuman, char *nameToGive);
 Human *getHumanByName(Human **array, unsigned int arrayLen, char *nameToFind);
@@ -45,6 +45,11 @@ Human *getYoungestChild(Human *parent);
 void initializeHumanValues(Human *toUpdate, char *name, unsigned int age);
 void freeAllFamilyHeads(FamilyHead *firstHuman);
 void freeAll(FamilyHead *firstHuman);
+void printArrayOrganized(Human **array, unsigned int arrLen);
+int compareStr(void *arr, int i, int j);
+void swapStr(void *arr, int i, int j);
+void sort(void *arr, int size, int (*compare)(void *, int, int), void (*swap)(void *, int, int));
+Human **addChildrensToArray(Human *human, Human **array, unsigned int *index, FamilyHead *firstHuman);
 
 // -> Missions funcs
 void inputToCreateFamilyHead(FamilyHead *firstHuman);
@@ -53,7 +58,7 @@ void createFamilyHead(FamilyHead *firstHuman, char *name, unsigned int age);
 void marryTwoHumans(FamilyHead *firstHuman);
 
 void inputToCreateNewBorn(FamilyHead *firstHuman);
-void createNewBorn(Human *firstParent, Human *secondParent, char *babyName);
+void createNewBorn(Human *firstParent, Human *secondParent, char *babyName, FamilyHead *firstHuman);
 
 void printFamily(FamilyHead *firstHuman);
 void printFamilyFurther(Human *human, unsigned int tabTimes);
@@ -64,7 +69,7 @@ void yearsPass(FamilyHead *firstHuman);
 void countHumans(FamilyHead *firstHuman);
 
 void inputToPrintCousins(FamilyHead *firstHuman);
-Human **getCousinsArray(Human *human, unsigned int degree, Human **array, unsigned int *index);
+Human **getCousinsArray(Human *human, unsigned int degree, Human **array, unsigned int *index, FamilyHead *firstH);
 
 /**
  * @brief Main function that wait for user input to navigate the user
@@ -79,6 +84,8 @@ int main() {
     FamilyHead *firstHuman = (FamilyHead *)malloc(sizeof(FamilyHead));
     if (firstHuman == NULL) {
         exit(1);
+        // free all the structs in this program run before closing it.
+        freeAll(firstHuman);
     }
 
     // reset the value and next to null
@@ -204,6 +211,8 @@ Human **scanTree(FamilyHead *firstHuman, unsigned int *arrayLen) {
     Human **array = (Human **)malloc(sizeof(Human *));
     if (array == NULL) {
         exit(1);
+        // free all the structs in this program run before closing it.
+        freeAll(firstHuman);
     }
 
     // save the size of the array.
@@ -222,6 +231,8 @@ Human **scanTree(FamilyHead *firstHuman, unsigned int *arrayLen) {
         array = (Human **)realloc(array, (*arrayLen) * sizeof(Human *));
         if (array == NULL) {
             exit(1);
+            // free all the structs in this program run before closing it.
+            freeAll(firstHuman);
         }
 
         // insert the human in the array in the right place.
@@ -231,7 +242,7 @@ Human **scanTree(FamilyHead *firstHuman, unsigned int *arrayLen) {
 
         // if there is a firstChild check further
         if (firstHuman->properties->firstChild != NULL) {
-            array = scanTreeFurther(firstHuman->properties->firstChild, array, &index);
+            array = scanTreeFurther(firstHuman->properties->firstChild, array, &index, firstHuman);
         }
 
         firstHuman = firstHuman->next;
@@ -250,8 +261,12 @@ Human **scanTree(FamilyHead *firstHuman, unsigned int *arrayLen) {
  *
  * @param human the human to scan
  * @param dontScanAgain an array to save the humans we don't want to scan again. (if we won't through them).
+ * @param index the pointer to the index we are in
+ * @param firstHuman the first family head in the whole tree.
+ *
+ * @return the new pointer to the complete dontScanAgain array
  */
-Human **scanTreeFurther(Human *human, Human **dontScanAgain, unsigned int *index) {
+Human **scanTreeFurther(Human *human, Human **dontScanAgain, unsigned int *index, FamilyHead *firstHuman) {
     if (human != NULL) {
         // if he's in the dontScanAgain we return before processing
         if (isPtrInArray(dontScanAgain, human, *index) == 1) {
@@ -267,16 +282,18 @@ Human **scanTreeFurther(Human *human, Human **dontScanAgain, unsigned int *index
         dontScanAgain = (Human **)realloc(dontScanAgain, ((*index) + 1) * sizeof(Human *));
         if (dontScanAgain == NULL) {
             exit(1);
+            // free all the structs in this program run before closing it.
+            freeAll(firstHuman);
         }
 
         // add him to the dontScanAgain array
         dontScanAgain[*index] = human;
 
         // send this human firstChild to scanTreeFurther
-        dontScanAgain = scanTreeFurther(human->firstChild, dontScanAgain, index);
+        dontScanAgain = scanTreeFurther(human->firstChild, dontScanAgain, index, firstHuman);
 
         // send this human siblings to scanTreeFurther
-        dontScanAgain = scanTreeFurther(human->sibling, dontScanAgain, index);
+        dontScanAgain = scanTreeFurther(human->sibling, dontScanAgain, index, firstHuman);
     }
 
     return dontScanAgain;
@@ -286,13 +303,16 @@ Human **scanTreeFurther(Human *human, Human **dontScanAgain, unsigned int *index
  * @brief create a string from the user inputs.
  * if memory allocation fail we exit the program.
  *
+ * @param firstHuman the first family head in the whole tree.
  * @return the string.
  */
-char *stringFromUser() {
+char *stringFromUser(FamilyHead *firstHuman) {
     // initialize the str and allocate memory
     char *str = (char *)malloc(sizeof(char));
     if (str == NULL) {
         exit(1);
+        // free all the structs in this program run before closing it.
+        freeAll(firstHuman);
     }
 
     unsigned int index = 0;
@@ -309,6 +329,8 @@ char *stringFromUser() {
         str = (char *)realloc(str, (index + 1) * sizeof(char));
         if (str == NULL) {
             exit(1);
+            // free all the structs in this program run before closing it.
+            freeAll(firstHuman);
         }
 
         // check the index we just inserted to and see if it's new line.
@@ -461,6 +483,7 @@ int canMarry(Human *firstPerson, Human *secondPerson, FamilyHead *firstHuman) {
 
 /**
  * @brief this function check if the two humans are in the same family
+ * if memory allocation fail we exit the program.
  *
  * @param firstPerson pointer to the first person to check
  * @param secondPerson pointer to the second person to check
@@ -481,6 +504,8 @@ int inSameFamily(Human *firstPerson, Human *secondPerson, FamilyHead *firstHuman
         Human **array = (Human **)malloc(sizeof(Human *));
         if (array == NULL) {
             exit(1);
+            // free all the structs in this program run before closing it.
+            freeAll(firstHuman);
         }
 
         array[index] = firstHuman->properties;
@@ -490,7 +515,7 @@ int inSameFamily(Human *firstPerson, Human *secondPerson, FamilyHead *firstHuman
         // send his firstChild to the scanTreeFurther
 
         if (firstHuman->properties->firstChild != NULL) {
-            scanTreeFurther(firstHuman->properties->firstChild, array, &index);
+            scanTreeFurther(firstHuman->properties->firstChild, array, &index, firstHuman);
         }
 
         if (isPtrInArray(array, firstPerson, index) == 1 && isPtrInArray(array, secondPerson, index) == 1) {
@@ -509,6 +534,7 @@ int inSameFamily(Human *firstPerson, Human *secondPerson, FamilyHead *firstHuman
 
 /**
  * @brief print the given string without the new line.
+ *
  * @param str the pointer to the string to print
  */
 void printStrNoNewLine(char *str) {
@@ -595,14 +621,133 @@ void printHumanFormat(Human *humanToPrint) {
     printf(" (%d)", humanToPrint->age);
 }
 
-void printChildrens(Human *human) {
+/**
+ * @brief this function add all the childrens of the given human to the given array
+ * if memory allocation fail we exit the program.
+ *
+ * @param human the human to add the children of
+ * @param array the array to add the children to
+ * @param index the current index to start at
+ * @param firstHuman the first family head in the whole tree.
+ *
+ * @return the pointer to the changed array.
+ */
+Human **addChildrensToArray(Human *human, Human **array, unsigned int *index, FamilyHead *firstHuman) {
+    // make sure the memory is the right size.
+    array = (Human **)realloc(array, ((*index) + 1) * sizeof(Human *));
+    if (array == NULL) {
+        exit(1);
+        // free all the structs in this program run before closing it.
+        freeAll(firstHuman);
+    }
+
     Human *firstChild = human->firstChild;
-    while (firstChild != NULL) {
-        printStrNoNewLine(firstChild->name);
+    if (firstChild != NULL) {
+        array[*index] = firstChild;
 
-        printf("\n");
+        // adding new human so ++ the index.
+        *index = (*index) + 1;
 
-        firstChild = firstChild->sibling;
+        Human *siblings = firstChild->sibling;
+        while (siblings != NULL) {
+            /*
+            expand the memory according to the size thous far
+            we allocated index+1 to offset the diff of array numbering to actual numbers of memory blocks
+            */
+            array = (Human **)realloc(array, ((*index) + 1) * sizeof(Human *));
+            if (array == NULL) {
+                exit(1);
+                // free all the structs in this program run before closing it.
+                freeAll(firstHuman);
+            }
+
+            array[*index] = siblings;
+
+            // adding new human so ++ the index.
+            *index = (*index) + 1;
+
+            siblings = siblings->sibling;
+        }
+    }
+
+    return array;
+}
+
+/**
+ * @brief this function prints the names of the humans in organized manner
+ *
+ * @param array the array where the humans to print are
+ * @param arrLen the length of the array
+ */
+void printArrayOrganized(Human **array, unsigned int arrLen) {
+    // create arr of names to store all the names
+    if (arrLen != 0) {
+        // allocate the right size (same as the humans array)
+        char **arrOfNames = (char **)malloc(arrLen * sizeof(char *));
+
+        // populate the array of names from the array of humans
+        for (unsigned int i = 0; i < arrLen; i++) {
+            arrOfNames[i] = array[i]->name;
+        }
+
+        // sort the array to be lexicon order
+        sort(arrOfNames, arrLen, compareStr, swapStr);
+
+        // print all the content of the sorted array
+        for (unsigned int i = 0; i < arrLen; i++) {
+            printStrNoNewLine(arrOfNames[i]);
+            // add new line
+            printf("\n");
+        }
+
+        // free once we finished
+        free(arrOfNames);
+    }
+}
+
+/**
+ * @brief this function compare strings in the array between 2 indexes
+ *
+ * @param arr the arr contains the element
+ * @param i the first index
+ * @param j the second index
+ *
+ * @return the compare results.
+ */
+int compareStr(void *arr, int i, int j) {
+    char **strArr = (char **)arr;
+    return strcmp(strArr[i], strArr[j]);
+}
+
+/**
+ * @brief this function swap two elements in the array, they are strings.
+ *
+ * @param arr the arr contains the elements
+ * @param i the first index
+ * @param j the second index
+ */
+void swapStr(void *arr, int i, int j) {
+    char **strArr = (char **)arr;
+    char *tmp = strArr[i];
+    strArr[i] = strArr[j];
+    strArr[j] = tmp;
+}
+
+/**
+ * @brief this function bubble sorts the array, according to the compare and swap variant.
+ *
+ * @param arr the array to sort
+ * @param size the size of the array
+ * @param compare the compare function
+ * @param swap the swap function
+ */
+void sort(void *arr, int size, int (*compare)(void *, int, int), void (*swap)(void *, int, int)) {
+    for (int i = 0; i < size - 1; i++) {
+        for (int j = 0; j < size - 1 - i; j++) {
+            if (compare(arr, j, j + 1) > 0) {
+                swap(arr, j, j + 1);
+            }
+        }
     }
 }
 
@@ -649,6 +794,8 @@ void createFamilyHead(FamilyHead *firstHuman, char *name, unsigned int age) {
     Human *newHumanPointer = (Human *)malloc(sizeof(Human));
     if (newHumanPointer == NULL) {
         exit(1);
+        // free all the structs in this program run before closing it.
+        freeAll(firstHuman);
     }
 
     // first familyHead? save the value to firstHuman
@@ -661,6 +808,8 @@ void createFamilyHead(FamilyHead *firstHuman, char *name, unsigned int age) {
         FamilyHead *newHead = (FamilyHead *)malloc(sizeof(FamilyHead));
         if (newHead == NULL) {
             exit(1);
+            // free all the structs in this program run before closing it.
+            freeAll(firstHuman);
         }
 
         // reset the properties to new pointer and next to null
@@ -787,12 +936,15 @@ void inputToCreateNewBorn(FamilyHead *firstHuman) {
  * @param firstParent the firstParent to create a new born
  * @param secondParent the secondParent to create a new born
  * @param babyName the baby name the users chose for the new born
+ * @param firstHuman the first family head in the whole tree.
  */
-void createNewBorn(Human *firstParent, Human *secondParent, char *babyName) {
+void createNewBorn(Human *firstParent, Human *secondParent, char *babyName, FamilyHead *firstHuman) {
     // allocate memory to human pointer
     Human *newHumanPointer = (Human *)malloc(sizeof(Human));
     if (newHumanPointer == NULL) {
         exit(1);
+        // free all the structs in this program run before closing it.
+        freeAll(firstHuman);
     }
 
     // if it's their first child point to it.
@@ -875,6 +1027,7 @@ void printFamily(FamilyHead *firstHuman) {
  * @brief this function prints the family further
  *
  * @param human the human to start printing with
+ * @param tabTimes the times to print a tab according to the wanted format (1 for each children indent)
  */
 void printFamilyFurther(Human *human, unsigned int tabTimes) {
     // if the human exists
@@ -958,16 +1111,17 @@ void countHumans(FamilyHead *firstHuman) {
 
 /**
  * @brief this function takes the input to then print cousins of a person.
+ * if memory allocation fail we exit the program.
  *
  * @param firstHuman the first human in the program.
  */
 void inputToPrintCousins(FamilyHead *firstHuman) {
     // take the name of the person from the user
     printf("Enter the name of the person:\n");
-    char *nameOfHuman = stringFromUser();
+    char *nameOfHuman = stringFromUser(firstHuman);
 
     // take the degree level of the wanted cousin from the user
-    printf("Enter the name of the person:\n");
+    printf("Enter degree:\n");
     unsigned int degree;
     scanf("%d", &degree);
 
@@ -989,18 +1143,18 @@ void inputToPrintCousins(FamilyHead *firstHuman) {
         Human **array = (Human **)malloc(sizeof(Human *));
         if (array == NULL) {
             exit(1);
+            // free all the structs in this program run before closing it.
+            freeAll(firstHuman);
         }
         // save the size of the array.
         unsigned int index = 0;
-        array = getCousinsArray(wantedHuman, degree, array, &index);
+        array = getCousinsArray(wantedHuman, degree, array, &index, firstHuman);
 
-        // print all the items in the array just to check it
-        for (unsigned int i = 0; i < index + 1; i++) {
-            printStrNoNewLine(array[i]->name);
+        printf("Cousins:\n");
+        printArrayOrganized(array, index);
 
-            printf("\n");
-        }
-
+        // once we done with array free it
+        free(array);
     } else {
         printf("The person does not exist\n");
     }
@@ -1012,10 +1166,11 @@ void inputToPrintCousins(FamilyHead *firstHuman) {
  * @param firstHuman the first human in the program.
  * @param human the human to get the cousins of
  * @param degree the degree of the cousins to get
+ * @param firstHuman the first human in the program.
  *
  * @return pointer to the cousinsArray
  */
-Human **getCousinsArray(Human *human, unsigned int degree, Human **array, unsigned int *index) {
+Human **getCousinsArray(Human *human, unsigned int degree, Human **array, unsigned int *index, FamilyHead *firstH) {
 
     // exit case, if degree is 0 we are finished.
     if (degree == 0) {
@@ -1033,40 +1188,13 @@ Human **getCousinsArray(Human *human, unsigned int degree, Human **array, unsign
     // add children of firstChild and his sibling childrens
     while (firstChild != NULL) {
 
-        /*
-        expand the memory according to the size thous far
-        we allocated index+1 to offset the diff of array numbering to actual numbers of memory blocks
-        */
-        array = (Human **)realloc(array, ((*index) + 1) * sizeof(Human *));
-        if (array == NULL) {
-            exit(1);
-        }
-
         // add all firstChild childrens
-        Human *child = firstChild->firstChild;
-        array[*index] = child;
-
-        // adding new human so ++ the index.
-        *index = (*index) + 1;
-
-        Human *sibling = child->sibling;
-        while (sibling != NULL) {
-            array = (Human **)realloc(array, ((*index) + 1) * sizeof(Human *));
-            if (array == NULL) {
-                exit(1);
-            }
-
-            // adding new human so ++ the index.
-            *index = (*index) + 1;
-            sibling = sibling->sibling;
-        }
-
-        array[*index] = firstChild;
+        array = addChildrensToArray(firstChild, array, index, firstH);
 
         firstChild = firstChild->sibling;
     }
 
     // check forward with the parents, parent1 and parent2.
-    return getCousinsArray(human->parent1, degree - 1, array, index);
-    return getCousinsArray(human->parent2, degree - 1, array, index);
+    return getCousinsArray(human->parent1, degree - 1, array, index, firstH);
+    return getCousinsArray(human->parent2, degree - 1, array, index, firstH);
 }
