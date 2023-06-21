@@ -36,7 +36,7 @@ Human **scanTreeFurther(Human *human, Human **dontScanAgain, unsigned int *index
 char *stringFromUser();
 int isPtrInArray(Human **arrayOfPtr, void *ptr, unsigned int arrayLength);
 int isNameFree(FamilyHead *firstHuman, char *nameToGive);
-Human *getHumanByName(FamilyHead *firstHuman, char *nameToFind);
+Human *getHumanByName(Human **array, unsigned int arrayLen, char *nameToFind);
 int canMarry(Human *firstPerson, Human *secondPerson, FamilyHead *firstHuman);
 int inSameFamily(Human *firstPerson, Human *secondPerson, FamilyHead *firstHuman);
 void printStrNoNewLine(char *str);
@@ -170,6 +170,7 @@ void sendToMission(char choice, FamilyHead *firstHuman) {
             inputToCreateNewBorn(firstHuman);
             break;
         case '4':
+            printFamily(firstHuman);
             break;
         case '5':
             yearsPass(firstHuman);
@@ -207,15 +208,30 @@ Human **scanTree(FamilyHead *firstHuman, unsigned int *arrayLen) {
     }
 
     while (firstHuman != NULL) {
-        array[index] = firstHuman->properties;
+        // the actual length is always the index + 1 because we start from 0 in the index count.
+        *arrayLen = index + 1;
 
-        index++;
-        *arrayLen = index;
+        // insert the human in the array in the right place.
+        array[index] = firstHuman->properties;
 
         // send his firstChild to the scanTreeFurther
 
         if (firstHuman->properties->firstChild != NULL) {
             array = scanTreeFurther(firstHuman->properties->firstChild, array, &index);
+
+            // realloc the memory in case we don't enter the scanTreeFurther
+        } else {
+            /*
+            expand the memory according to the size thous far (*arrayLen) *
+            we allocated index+1 to offset the diff of array numbering to actual numbers of memory blocks
+            */
+            array = (Human **)realloc(array, (*arrayLen + 1) * sizeof(Human *));
+            if (array == NULL) {
+                exit(1);
+            }
+
+            // there is a human to add so index goes by 1. (prep for next iteration)
+            index++;
         }
 
         firstHuman = firstHuman->next;
@@ -240,17 +256,17 @@ Human **scanTreeFurther(Human *human, Human **dontScanAgain, unsigned int *index
         }
         /*
         expand the memory according to the size thous far
-        we allocated index+1 to offset the diff of array numbering to actual numbers of memory blocks
+        we allocated index+2 to offset the diff of array numbering to actual numbers of memory blocks
         */
-        dontScanAgain = (Human **)realloc(dontScanAgain, ((*index) + 1) * sizeof(Human *));
+        dontScanAgain = (Human **)realloc(dontScanAgain, ((*index) + 2) * sizeof(Human *));
         if (dontScanAgain == NULL) {
             exit(1);
         }
+        // adding new human so ++ the index.
+        *index = (*index) + 1;
 
         // add him to the dontScanAgain array
         dontScanAgain[*index] = human;
-
-        *index = (*index) + 1;
 
         // send this human firstChild to scanTreeFurther
         dontScanAgain = scanTreeFurther(human->firstChild, dontScanAgain, index);
@@ -383,7 +399,6 @@ int isNameFree(FamilyHead *firstHuman, char *nameToGive) {
     }
     // free the array after use
     free(array);
-
     // couldn't find it so, it's free
     return 1;
 }
@@ -397,11 +412,7 @@ int isNameFree(FamilyHead *firstHuman, char *nameToGive) {
  *
  * @return the human with the same name, or null if it does not exists.
  */
-Human *getHumanByName(FamilyHead *firstHuman, char *nameToFind) {
-    // get the array with all the humans
-    unsigned int arrayLen = 0;
-    Human **array = scanTree(firstHuman, &arrayLen);
-
+Human *getHumanByName(Human **array, unsigned int arrayLen, char *nameToFind) {
     // loop through every element
     for (unsigned int i = 0; i < arrayLen; i++) {
         // if the name of an element is the same as the name we want to give it's not free, return 0.
@@ -410,8 +421,6 @@ Human *getHumanByName(FamilyHead *firstHuman, char *nameToFind) {
             return array[i];
         }
     }
-
-    free(array);
 
     // couldn't find it so, it's free
     return NULL;
@@ -601,21 +610,12 @@ void inputToCreateFamilyHead(FamilyHead *firstHuman) {
 
     cleanBuffer();
 
-    // get the array of humans in scanTree
-    unsigned int arrayLen = 0;
-    Human **array = scanTree(firstHuman, &arrayLen);
-
     // check if the name we want exists in the array
     int exists = isNameFree(firstHuman, name);
     if (exists == 0) {
         printf("The name is already taken\n");
-        // free the array after we used it.
-        free(array);
         return;
     }
-
-    // free the array after we used it.
-    free(array);
 
     // create the familyHead with the name and age we want.
     createFamilyHead(firstHuman, name, age);
@@ -674,9 +674,16 @@ void marryTwoHumans(FamilyHead *firstHuman) {
     printf("Enter the name of the second person:\n");
     char *secondPersonName = stringFromUser();
 
+    // get the array with all the humans
+    unsigned int arrayLen = 0;
+    Human **array = scanTree(firstHuman, &arrayLen);
+
     // get them both by name
-    Human *firstPerson = getHumanByName(firstHuman, firstPersonName);
-    Human *secondPerson = getHumanByName(firstHuman, secondPersonName);
+    Human *firstPerson = getHumanByName(array, arrayLen, firstPersonName);
+    Human *secondPerson = getHumanByName(array, arrayLen, secondPersonName);
+
+    // free array after use
+    free(array);
 
     // if both persons exists
     if (firstPerson != NULL && secondPerson != NULL) {
@@ -699,7 +706,7 @@ void marryTwoHumans(FamilyHead *firstHuman) {
     } else {
         printf("One of the persons does not exist\n");
     }
-    // free the names
+    // free the names and the objects
     free(firstPersonName);
     free(secondPersonName);
 }
@@ -721,9 +728,16 @@ void inputToCreateNewBorn(FamilyHead *firstHuman) {
     printf("Enter offspring's name:\n");
     char *babyName = stringFromUser();
 
+    // get the array with all the humans
+    unsigned int arrayLen = 0;
+    Human **array = scanTree(firstHuman, &arrayLen);
+
     // get them both by name
-    Human *firstParent = getHumanByName(firstHuman, firstParentName);
-    Human *secondParent = getHumanByName(firstHuman, secondParentName);
+    Human *firstParent = getHumanByName(array, arrayLen, firstParentName);
+    Human *secondParent = getHumanByName(array, arrayLen, secondParentName);
+
+    // free array after use
+    free(array);
 
     // free the string of the names after we got the humans objs and the array itself.
     free(firstParentName);
@@ -748,7 +762,6 @@ void inputToCreateNewBorn(FamilyHead *firstHuman) {
         }
     } else {
         printf("One of the persons does not exist\n");
-        free(babyName);
     }
 }
 
@@ -784,6 +797,10 @@ void createNewBorn(Human *firstParent, Human *secondParent, char *babyName) {
     // create the human with name and age(default is 0), everything else is null, and put in the new pointer.
     initializeHumanValues(newHumanPointer, babyName, 0);
 
+    // make them his parents
+    newHumanPointer->parent1 = firstParent;
+    newHumanPointer->parent2 = secondParent;
+
     // the baby was born!
     printStrNoNewLine(babyName);
     printf(" was born\n");
@@ -799,8 +816,15 @@ void printFamily(FamilyHead *firstHuman) {
     printf("Enter the name of the person:\n");
     char *nameOfHuman = stringFromUser();
 
+    // get the array with all the humans
+    unsigned int arrayLen = 0;
+    Human **array = scanTree(firstHuman, &arrayLen);
+
     // get the human object from the name
-    Human *wantedHuman = getHumanByName(firstHuman, nameOfHuman);
+    Human *wantedHuman = getHumanByName(array, arrayLen, nameOfHuman);
+
+    // free array after use
+    free(array);
 
     // free the name after use
     free(nameOfHuman);
@@ -877,6 +901,8 @@ void yearsPass(FamilyHead *firstHuman) {
     printf("Enter number of years:\n");
     unsigned int years;
     scanf("%d", &years);
+
+    cleanBuffer();
 
     unsigned int arrayLen = 0;
     Human **array = scanTree(firstHuman, &arrayLen);
