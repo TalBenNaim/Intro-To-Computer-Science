@@ -761,7 +761,7 @@ void sort(void *arr, int size, int (*compare)(void *, int, int), void (*swap)(vo
 void inputToCreateFamilyHead(FamilyHead *firstHuman) {
     // get name from user
     printf("Enter a name:\n");
-    char *name = stringFromUser();
+    char *name = stringFromUser(firstHuman);
 
     // get age from user
     printf("Enter age:\n");
@@ -833,10 +833,10 @@ void createFamilyHead(FamilyHead *firstHuman, char *name, unsigned int age) {
 void marryTwoHumans(FamilyHead *firstHuman) {
     // ask the user who he want's to marry with who
     printf("Enter the name of the first person:\n");
-    char *firstPersonName = stringFromUser();
+    char *firstPersonName = stringFromUser(firstHuman);
 
     printf("Enter the name of the second person:\n");
-    char *secondPersonName = stringFromUser();
+    char *secondPersonName = stringFromUser(firstHuman);
 
     // get the array with all the humans
     unsigned int arrayLen = 0;
@@ -883,14 +883,14 @@ void marryTwoHumans(FamilyHead *firstHuman) {
 void inputToCreateNewBorn(FamilyHead *firstHuman) {
     // ask the user who he want's to marry with who
     printf("Enter the name of the first parent:\n");
-    char *firstParentName = stringFromUser();
+    char *firstParentName = stringFromUser(firstHuman);
 
     printf("Enter the name of the second parent:\n");
-    char *secondParentName = stringFromUser();
+    char *secondParentName = stringFromUser(firstHuman);
 
     // get the wanted baby name
     printf("Enter offspring's name:\n");
-    char *babyName = stringFromUser();
+    char *babyName = stringFromUser(firstHuman);
 
     // get the array with all the humans
     unsigned int arrayLen = 0;
@@ -919,7 +919,7 @@ void inputToCreateNewBorn(FamilyHead *firstHuman) {
 
                 // its free so create the baby
             } else {
-                createNewBorn(firstParent, secondParent, babyName);
+                createNewBorn(firstParent, secondParent, babyName, firstHuman);
             }
         } else {
             printf("The parents are not married\n");
@@ -981,7 +981,7 @@ void createNewBorn(Human *firstParent, Human *secondParent, char *babyName, Fami
 void printFamily(FamilyHead *firstHuman) {
     // take the name of the person from the user
     printf("Enter the name of the person:\n");
-    char *nameOfHuman = stringFromUser();
+    char *nameOfHuman = stringFromUser(firstHuman);
 
     // get the array with all the humans
     unsigned int arrayLen = 0;
@@ -1070,7 +1070,7 @@ void printFamilyFurther(Human *human, unsigned int tabTimes) {
 void yearsPass(FamilyHead *firstHuman) {
     printf("Enter number of years:\n");
     unsigned int years;
-    scanf("%d", &years);
+    scanf("%u", &years);
 
     cleanBuffer();
 
@@ -1123,7 +1123,7 @@ void inputToPrintCousins(FamilyHead *firstHuman) {
     // take the degree level of the wanted cousin from the user
     printf("Enter degree:\n");
     unsigned int degree;
-    scanf("%d", &degree);
+    scanf("%u", &degree);
 
     cleanBuffer();
 
